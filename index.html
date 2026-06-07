@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Informes - Oficina del Sheriff 1885</title>
+    
+    <!-- SEO y Meta Tags -->
+    <meta name="description" content="Generador interactivo de informes históricos de la Oficina del Sheriff (1885) para servidores de RedM Roleplay. Carga datos y exporta el informe como imagen o PDF.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Rye&family=Pinyon+Script&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Hoja de estilos -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- html2canvas para exportación a imagen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Panel de control / Formulario (Izquierda) -->
+        <aside class="control-panel">
+            <header class="panel-header">
+                <div class="logo-area">
+                    <span class="badge-icon">⭐</span>
+                    <h1>Sheriff Report Maker</h1>
+                </div>
+                <p class="subtitle">Creador de Informes de Época • RedM Roleplay</p>
+            </header>
+
+            <form id="report-form" class="form-container">
+                <!-- CABECERA DEL INFORME -->
+                <section class="form-section">
+                    <h2><span class="section-num">0.</span> Cabecera e Identificación</h2>
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label for="input-reg-num">N.º de Registro</label>
+                            <div class="reg-input-wrapper">
+                                <input type="text" id="input-reg-num" name="regNum" value="INF-POL-0">
+                                <button type="button" id="btn-next-reg" title="Incrementar número" class="btn-icon">＋</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="input-subtitle">Asunto / Estado</label>
+                            <input type="text" id="input-subtitle" name="subtitle" value="Posible Contratación de Pistoleros">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 1. INFORMACIÓN DEL CASO -->
+                <section class="form-section">
+                    <h2><span class="section-num">1.</span> Información del Caso</h2>
+                    <div class="form-group">
+                        <label for="input-date">Fecha y Hora</label>
+                        <input type="text" id="input-date" name="caseDate" placeholder="Ej: 06/06/1885">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-location">Lugar de los hechos</label>
+                        <input type="text" id="input-location" name="caseLocation" placeholder="Ej: Banco de Valentine, Valentine">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-title">Título del informe</label>
+                        <input type="text" id="input-title" name="caseTitle" placeholder="Ej: Posible contratación irregular de personal armado...">
+                    </div>
+                </section>
+
+                <!-- 2. PERSONAS INVOLUCRADAS -->
+                <section class="form-section">
+                    <h2><span class="section-num">2.</span> Personas Involucradas</h2>
+                    <div class="form-group">
+                        <label for="input-agents">Agentes involucrados</label>
+                        <input type="text" id="input-agents" name="involvedAgents" placeholder="Ej: Recluta Wesley Grant, Oficial Emiliano Ortega">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-criminals">Delincuentes involucrados</label>
+                        <input type="text" id="input-criminals" name="involvedCriminals" value="N/A">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-civilians">Civiles involucrados</label>
+                        <input type="text" id="input-civilians" name="involvedCivilians" value="N/A">
+                    </div>
+                    <div class="form-group">
+                        <label for="input-victims">Víctimas</label>
+                        <input type="text" id="input-victims" name="involvedVictims" value="N/A">
+                    </div>
+                </section>
+
+                <!-- 3. INFORME DE LOS HECHOS -->
+                <section class="form-section">
+                    <h2><span class="section-num">3.</span> Informe de los Hechos</h2>
+                    <div class="form-group">
+                        <label for="input-narrative">Narrativa del suceso</label>
+                        <textarea id="input-narrative" name="narrative" rows="10" placeholder="Escribe aquí los detalles del informe redactados a máquina..."></textarea>
+                    </div>
+                </section>
+
+                <!-- 4. ACTUACIONES REALIZADAS -->
+                <section class="form-section">
+                    <div class="section-header-btn">
+                        <h2><span class="section-num">4.</span> Actuaciones Realizadas</h2>
+                        <button type="button" id="btn-add-action" class="btn-sm">＋ Añadir</button>
+                    </div>
+                    <div id="actions-list-container" class="dynamic-inputs-container">
+                        <!-- Campos agregados dinámicamente por JS -->
+                    </div>
+                </section>
+
+                <!-- 5. PRUEBAS O EVIDENCIAS RECOGIDAS -->
+                <section class="form-section">
+                    <div class="section-header-btn">
+                        <h2><span class="section-num">5.</span> Pruebas o Evidencias Recogidas</h2>
+                        <button type="button" id="btn-add-evidence" class="btn-sm">＋ Añadir</button>
+                    </div>
+                    <div id="evidences-list-container" class="dynamic-inputs-container">
+                        <!-- Campos agregados dinámicamente por JS -->
+                    </div>
+                </section>
+
+                <!-- 6. OBSERVACIONES ADICIONALES -->
+                <section class="form-section">
+                    <h2><span class="section-num">6.</span> Observaciones Adicionales</h2>
+                    <div class="form-group">
+                        <label for="input-observations">Observaciones</label>
+                        <textarea id="input-observations" name="observations" rows="4" placeholder="Escribe recomendaciones, conclusiones o notas futuras..."></textarea>
+                    </div>
+                </section>
+
+                <!-- 7. FIRMA Y AJUSTES -->
+                <section class="form-section">
+                    <h2><span class="section-num">7.</span> Firma del Responsable</h2>
+                    <div class="form-group">
+                        <label for="input-signature-name">Nombre que firma</label>
+                        <input type="text" id="input-signature-name" name="signatureName" placeholder="Ej: Wesley Grant">
+                    </div>
+                    <div class="form-group">
+                        <label>Método de firma</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="sigMethod" value="font" checked>
+                                Caligrafía (Tipográfica)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="sigMethod" value="draw">
+                                Dibujar Firma
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Canvas para dibujar firma -->
+                    <div id="signature-pad-container" class="sig-pad-container" style="display: none;">
+                        <canvas id="signature-canvas" width="300" height="100"></canvas>
+                        <button type="button" id="btn-clear-sig" class="btn-xs">Borrar dibujo</button>
+                    </div>
+                </section>
+
+                <!-- 8. CONFIGURACIÓN DISCORD WEBHOOK -->
+                <section class="form-section discord-section">
+                    <h2><span class="section-num">8.</span> Integración con Discord</h2>
+                    <div class="form-group">
+                        <label for="input-webhook-url">URL del Webhook de Discord</label>
+                        <div class="webhook-input-wrapper">
+                            <input type="password" id="input-webhook-url" name="webhookUrl" placeholder="https://discord.com/api/webhooks/...">
+                            <button type="button" id="btn-toggle-webhook" class="btn-xs" title="Mostrar/Ocultar URL" style="height: 38px; width: 38px; font-size: 14px;">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group-row" style="align-items: center; margin-top: 4px;">
+                        <label class="radio-label" style="text-transform: none; font-weight: normal; margin-bottom: 0;">
+                            <input type="checkbox" id="chk-auto-webhook" name="autoWebhook" checked style="width: 16px; height: 16px; accent-color: var(--accent); margin-right: 6px;">
+                            Envío automático
+                        </label>
+                        <button type="button" id="btn-test-webhook" class="btn-xs" style="padding: 8px 12px; margin-left: auto;">Probar Webhook</button>
+                    </div>
+                </section>
+            </form>
+
+            <footer class="panel-actions">
+                <button type="button" id="btn-download-png" class="btn-primary">Descargar PNG</button>
+                <div class="btn-row">
+                    <button type="button" id="btn-copy-text" class="btn-secondary">Copiar Texto</button>
+                    <button type="button" id="btn-download-pdf" class="btn-secondary">Descargar PDF</button>
+                </div>
+                <button type="button" id="btn-reset" class="btn-danger">Limpiar Todo</button>
+            </footer>
+        </aside>
+
+        <!-- Previsualización del Informe (Derecha) -->
+        <main class="preview-area">
+            <div class="preview-header-sticky">
+                <h3>Vista Previa del Informe</h3>
+                <span class="paper-size-tag">A4 (Papel de Época)</span>
+            </div>
+
+            <!-- Contenedor del informe impreso (A4 exacto) -->
+            <div class="report-wrapper">
+                <article id="report-preview" class="report-paper">
+                    <!-- Cabecera principal -->
+                    <div class="report-header">
+                        <!-- Placa Sheriff izquierda -->
+                        <div class="report-badge-container">
+                            <img id="preview-badge" src="assets/badge.png" alt="Placa Sheriff" class="badge-img">
+                        </div>
+
+                        <!-- Texto cabecera central -->
+                        <div class="report-title-container">
+                            <h1 class="header-main-title">OFICINA DEL SHERIFF</h1>
+                            <div class="header-divider-fancy"></div>
+                            <span class="header-year">1885</span>
+                            <div class="header-report-title" id="preview-header-report-title">INFORME - OFICINA DEL SHERIFF 1885</div>
+                        </div>
+
+                        <!-- Caja de registro derecha -->
+                        <div class="report-registry-box">
+                            <div class="reg-title">N.º DE REGISTRO</div>
+                            <div class="reg-number" id="preview-reg-num">INF-POL-0</div>
+                            <div class="reg-divider"></div>
+                            <div class="reg-status" id="preview-subtitle">Posible Contratación de Pistoleros</div>
+                        </div>
+                    </div>
+
+                    <div class="report-content">
+                        <!-- 1. INFORMACIÓN DEL CASO -->
+                        <div class="report-section">
+                            <h4 class="section-title">1. INFORMACIÓN DEL CASO</h4>
+                            <div class="section-fields">
+                                <div class="field-row">
+                                    <span class="field-label">Fecha y hora:</span>
+                                    <span class="field-val" id="preview-date">06/06/1885</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Lugar de los hechos:</span>
+                                    <span class="field-val" id="preview-location">Banco de Valentine, Valentine</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Título del informe:</span>
+                                    <span class="field-val" id="preview-title">Posible contratación irregular de personal armado por parte de la empresa Callahan Express</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. PERSONAS INVOLUCRADAS -->
+                        <div class="report-section">
+                            <h4 class="section-title">2. PERSONAS INVOLUCRADAS</h4>
+                            <div class="section-fields">
+                                <div class="field-row">
+                                    <span class="field-label">Agentes involucrados:</span>
+                                    <span class="field-val" id="preview-agents">Recluta Wesley Grant, Oficial Emiliano Ortega</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Delincuentes involucrados:</span>
+                                    <span class="field-val" id="preview-criminals">N/A</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Civiles involucrados:</span>
+                                    <span class="field-val" id="preview-civilians">N/A</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Víctimas:</span>
+                                    <span class="field-val" id="preview-victims">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. INFORME DE LOS HECHOS -->
+                        <div class="report-section">
+                            <h4 class="section-title">3. INFORME DE LOS HECHOS</h4>
+                            <p class="section-text-block" id="preview-narrative">
+                                Mientras el Recluta Wesley Grant se encontraba fuera de servicio en el banco de Valentine realizando el ingreso de dinero personal, escuchó una conversación entre dos individuos. Durante dicha conversación, uno de ellos ofreció al otro la posibilidad de trabajar para la empresa Callahan Express, indicando expresamente que la empresa se encontraba buscando "pistoleros" para desempeñar labores dentro de la misma.
+                            </p>
+                        </div>
+
+                        <!-- Grid 4 y 5 (Dos columnas) -->
+                        <div class="report-two-columns">
+                            <!-- 4. ACTUACIONES REALIZADAS -->
+                            <div class="report-section col-6">
+                                <h4 class="section-title">4. ACTUACIONES REALIZADAS</h4>
+                                <ul class="section-list" id="preview-actions">
+                                    <li>Recepción de información inicial por parte del Recluta Wesley Grant.</li>
+                                    <li>Comunicación inmediata de los hechos a un superior.</li>
+                                    <li>Verificación encubierta realizada por el Oficial Emiliano Ortega.</li>
+                                </ul>
+                            </div>
+
+                            <!-- 5. PRUEBAS O EVIDENCIAS RECOGIDAS -->
+                            <div class="report-section col-6">
+                                <h4 class="section-title">5. PRUEBAS O EVIDENCIAS RECOGIDAS</h4>
+                                <ul class="section-list" id="preview-evidences">
+                                    <li>Declaración del Recluta Wesley Grant.</li>
+                                    <li>Verificación directa realizada por el Oficial Emiliano Ortega.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- 6. OBSERVACIONES ADICIONALES -->
+                        <div class="report-section">
+                            <h4 class="section-title">6. OBSERVACIONES ADICIONALES</h4>
+                            <p class="section-text-block" id="preview-observations">
+                                Se recomienda comprobar la documentación mercantil y licencias de la empresa Callahan Express para determinar si dispone de autorización legal para realizar labores de seguridad privada.
+                            </p>
+                        </div>
+
+                        <!-- 7. FIRMA -->
+                        <div class="report-section report-signature-section">
+                            <h4 class="section-title">7. FIRMA</h4>
+                            <div class="signature-block">
+                                <div class="signature-line-container">
+                                    <span class="signature-label">Firma del sheriff responsable:</span>
+                                    <div class="signature-area">
+                                        <!-- Firma tipográfica -->
+                                        <span id="preview-sig-font" class="sig-font-render">Wesley Grant</span>
+                                        <!-- Imagen de la firma dibujada -->
+                                        <img id="preview-sig-img" src="" alt="Firma" class="sig-img-render" style="display: none;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Sello Oficial superpuesto -->
+                                <div class="official-seal-container">
+                                    <img id="preview-seal" src="assets/seal.png" alt="Sello Oficial" class="seal-img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </main>
+    </div>
+    <!-- Carga de la lógica de la aplicación -->
+    <script src="app.js"></script>
+</body>
+</html>
