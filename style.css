@@ -173,6 +173,7 @@ label {
 }
 
 input[type="text"],
+select,
 textarea {
     background-color: var(--bg-input);
     border: 1px solid var(--border-color);
@@ -187,10 +188,16 @@ textarea {
 }
 
 input[type="text"]:focus,
+select:focus,
 textarea:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(212, 163, 92, 0.15);
     background-color: rgba(41, 33, 28, 1);
+}
+
+select option {
+    background-color: var(--bg-panel);
+    color: var(--text-light);
 }
 
 textarea {
@@ -430,6 +437,7 @@ button {
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    gap: 40px;
 }
 
 /* ==========================================
@@ -764,6 +772,176 @@ button {
 }
 
 /* ==========================================
+   NUEVOS LAYOUTS Y ESTILOS (DOCUMENTOS 1885)
+   ========================================== */
+
+/* Habilitar ocultamiento de cabecera en Wanted Poster */
+.report-paper.doc-type-warrant .report-header {
+    display: none !important;
+}
+
+/* Forzar que el Wanted Poster ocupe toda la altura */
+.report-paper.doc-type-warrant {
+    justify-content: flex-start;
+}
+
+/* Contenedor base para plantillas */
+.report-content-template {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-grow: 1;
+    height: 100%;
+}
+
+/* Tabla de calificaciones en Evaluación */
+.evaluation-table {
+    border: 1px solid #1a1510;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.evaluation-table th {
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: rgba(26, 21, 16, 0.06);
+}
+.evaluation-table td {
+    font-family: inherit;
+}
+
+/* Wanted Poster Portrait y Filtro Sepia Daguerrotipo */
+.wanted-portrait-box img {
+    transition: filter 0.3s ease;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+.wanted-portrait-box::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+    pointer-events: none;
+}
+
+.wanted-reward-container {
+    box-shadow: inset 0 0 20px rgba(158, 42, 34, 0.05);
+}
+
+/* Botón de carga de archivos */
+input[type="file"]::-webkit-file-upload-button {
+    background-color: var(--accent);
+    color: #000;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background-color 0.2s;
+}
+
+input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Ocultación de campos condicionales del formulario */
+.form-section.doc-field {
+    transition: all 0.25s ease;
+}
+
+/* ==========================================
+   ESTILOS PANTALLA DE SELECCIÓN Y CARDS
+   ========================================== */
+.selector-screen-container {
+    animation: fadeIn 0.4s ease;
+}
+
+.selector-card {
+    background-color: #1e1914;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.selector-card:hover {
+    border-color: var(--accent);
+    background-color: #2b231c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.selector-card:active {
+    transform: translateY(0);
+}
+
+.card-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.card-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--accent);
+}
+
+.card-desc {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    line-height: 1.3;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Carpeta Archivador de Bienvenida (Estética Cuero) */
+.welcome-binder-paper {
+    background-color: #3b2c20 !important;
+    background-image: linear-gradient(135deg, #3d2f25 0%, #211812 100%) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), inset 0 0 100px rgba(0,0,0,0.8) !important;
+    border: 8px solid #140d0a !important;
+    justify-content: center;
+}
+
+.binder-embossed-border::before {
+    content: '';
+    position: absolute;
+    top: 5px; left: 5px; right: 5px; bottom: 5px;
+    border: 1px dashed rgba(212, 163, 92, 0.15);
+    pointer-events: none;
+}
+
+/* Ocultar carpeta archivador en impresión */
+@media print {
+    #welcome-binder {
+        display: none !important;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================
    ESTILOS DE IMPRESIÓN Y PDF
    ========================================== */
 @media print {
@@ -788,7 +966,7 @@ button {
     .control-panel,
     .preview-header-sticky,
     .paper-size-tag,
-    .preview-area {
+    .info-paper {
         display: none !important;
     }
     

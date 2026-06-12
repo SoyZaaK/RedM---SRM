@@ -31,10 +31,67 @@
                 <p class="subtitle">Creador de Informes de Época • RedM Roleplay</p>
             </header>
 
-            <form id="report-form" class="form-container">
-                <!-- CABECERA DEL INFORME -->
+            <!-- PANTALLA DE SELECCIÓN INICIAL -->
+            <div id="document-selector-screen" class="selector-screen-container" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; flex-grow: 1;">
+                <h3 class="selector-title" style="font-family: 'Rye', serif; font-size: 16px; color: var(--accent); text-align: center; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Seleccione Tipo de Expediente</h3>
+                <div class="selector-cards-grid" style="display: flex; flex-direction: column; gap: 12px;">
+                    <button type="button" class="selector-card" data-type="police_report">
+                        <span class="card-icon">⭐</span>
+                        <div class="card-text">
+                            <span class="card-title">Informe Policial</span>
+                            <span class="card-desc">Sucesos, agentes, delincuentes y actuaciones.</span>
+                        </div>
+                    </button>
+                    <button type="button" class="selector-card" data-type="evaluation">
+                        <span class="card-icon">📋</span>
+                        <div class="card-text">
+                            <span class="card-title">Evaluación de Agente</span>
+                            <span class="card-desc">Calificación de aptitudes, conducta y veredictos.</span>
+                        </div>
+                    </button>
+                    <button type="button" class="selector-card" data-type="complaint">
+                        <span class="card-icon">📝</span>
+                        <div class="card-text">
+                            <span class="card-title">Denuncia Ciudadana</span>
+                            <span class="card-desc">Relatos de civiles, pruebas y doble firma oficial.</span>
+                        </div>
+                    </button>
+                    <button type="button" class="selector-card" data-type="seizure">
+                        <span class="card-icon">⚖️</span>
+                        <div class="card-text">
+                            <span class="card-title">Acta de Incautación</span>
+                            <span class="card-desc">Detalles de bienes decomisados y destino final.</span>
+                        </div>
+                    </button>
+                    <button type="button" class="selector-card" data-type="warrant">
+                        <span class="card-icon">🚨</span>
+                        <div class="card-text">
+                            <span class="card-title">Orden de Arresto / Se Busca</span>
+                            <span class="card-desc">Cartel wanted con retrato sepia y recompensa.</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <form id="report-form" class="form-container" style="display: none;">
+                <!-- Volver al Selector principal -->
+                <div class="back-to-selector-row" style="margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <span class="active-type-badge" id="active-document-badge" style="font-size: 11px; font-weight: bold; padding: 4px 8px; background-color: var(--primary); color: #fff; border-radius: 4px; text-transform: uppercase; font-family: 'Outfit', sans-serif;">DOCUMENTO</span>
+                    <button type="button" id="btn-back-to-selector" class="btn-xs" style="background-color: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 6px 10px; cursor: pointer; transition: all 0.2s;">↩ Volver al Selector</button>
+                </div>
+                <!-- 0. CABECERA Y SELECCIÓN DE DOCUMENTO -->
                 <section class="form-section">
-                    <h2><span class="section-num">0.</span> Cabecera e Identificación</h2>
+                    <h2><span class="section-num">0.</span> Tipo de Documento y Registro</h2>
+                    <div class="form-group">
+                        <label for="input-doc-type">Tipo de Documento</label>
+                        <select id="input-doc-type" name="docType" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-light); padding: 10px 12px; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none; transition: all 0.25s ease; width: 100%;">
+                            <option value="police_report" selected>Informe Policial</option>
+                            <option value="evaluation">Evaluación de Agente</option>
+                            <option value="complaint">Denuncia Ciudadana</option>
+                            <option value="seizure">Acta de Incautación</option>
+                            <option value="warrant">Orden de Arresto / Se Busca</option>
+                        </select>
+                    </div>
                     <div class="form-group-row">
                         <div class="form-group">
                             <label for="input-reg-num">N.º de Registro</label>
@@ -44,98 +101,219 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="input-subtitle">Asunto / Estado</label>
+                            <label for="input-subtitle" id="lbl-subtitle">Asunto / Estado</label>
                             <input type="text" id="input-subtitle" name="subtitle" value="Posible Contratación de Pistoleros">
                         </div>
                     </div>
                 </section>
 
-                <!-- 1. INFORMACIÓN DEL CASO -->
+                <!-- 1. INFORMACIÓN GENERAL -->
                 <section class="form-section">
-                    <h2><span class="section-num">1.</span> Información del Caso</h2>
+                    <h2><span class="section-num">1.</span> Información General</h2>
                     <div class="form-group">
-                        <label for="input-date">Fecha y Hora</label>
+                        <label for="input-date" id="lbl-date">Fecha y Hora</label>
                         <input type="text" id="input-date" name="caseDate" placeholder="Ej: 06/06/1885">
                     </div>
-                    <div class="form-group">
-                        <label for="input-location">Lugar de los hechos</label>
-                        <input type="text" id="input-location" name="caseLocation" placeholder="Ej: Banco de Valentine, Valentine">
+                    <!-- Lugar (oculto en evaluación) -->
+                    <div class="form-group doc-field" data-doc-types="police_report,complaint,seizure,warrant" id="group-location">
+                        <label for="input-location" id="lbl-location">Lugar de los hechos</label>
+                        <input type="text" id="input-location" name="caseLocation" placeholder="Ej: Valentine, New Hanover">
                     </div>
+                    <!-- Título / Sujeto Principal (todos) -->
                     <div class="form-group">
-                        <label for="input-title">Título del informe</label>
-                        <input type="text" id="input-title" name="caseTitle" placeholder="Ej: Posible contratación irregular de personal armado...">
+                        <label for="input-title" id="lbl-title">Título del informe</label>
+                        <input type="text" id="input-title" name="caseTitle" placeholder="Ej: Posible contratación irregular...">
                     </div>
-                </section>
-
-                <!-- 2. PERSONAS INVOLUCRADAS -->
-                <section class="form-section">
-                    <h2><span class="section-num">2.</span> Personas Involucradas</h2>
-                    <div class="form-group">
-                        <label for="input-agents">Agentes involucrados</label>
-                        <input type="text" id="input-agents" name="involvedAgents" placeholder="Ej: Recluta Wesley Grant, Oficial Emiliano Ortega">
-                    </div>
-                    <div class="form-group">
-                        <label for="input-criminals">Delincuentes involucrados</label>
-                        <input type="text" id="input-criminals" name="involvedCriminals" value="N/A">
-                    </div>
-                    <div class="form-group">
-                        <label for="input-civilians">Civiles involucrados</label>
-                        <input type="text" id="input-civilians" name="involvedCivilians" value="N/A">
-                    </div>
-                    <div class="form-group">
-                        <label for="input-victims">Víctimas</label>
-                        <input type="text" id="input-victims" name="involvedVictims" value="N/A">
+                    <!-- Campo Agente Receptor (solo Denuncia) -->
+                    <div class="form-group doc-field" data-doc-types="complaint" id="group-recipient-agent" style="display: none;">
+                        <label for="input-recipient-agent">Agente que recibe la denuncia</label>
+                        <input type="text" id="input-recipient-agent" name="recipientAgent" placeholder="Ej: Ayudante John Marston">
                     </div>
                 </section>
 
-                <!-- 3. INFORME DE LOS HECHOS -->
+                <!-- 2. DETALLES DE LAS PERSONAS E INVOLUCRADOS -->
                 <section class="form-section">
-                    <h2><span class="section-num">3.</span> Informe de los Hechos</h2>
-                    <div class="form-group">
-                        <label for="input-narrative">Narrativa del suceso</label>
-                        <textarea id="input-narrative" name="narrative" rows="10" placeholder="Escribe aquí los detalles del informe redactados a máquina..."></textarea>
+                    <h2><span class="section-num">2.</span> Datos Específicos</h2>
+                    
+                    <!-- Policía: Agentes, Delincuentes, Civiles, Víctimas -->
+                    <div class="doc-field" data-doc-types="police_report" id="group-police-people">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-agents">Agentes involucrados</label>
+                            <input type="text" id="input-agents" name="involvedAgents" placeholder="Ej: Wesley Grant">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-criminals">Delincuentes involucrados</label>
+                            <input type="text" id="input-criminals" name="involvedCriminals" value="N/A">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-civilians">Civiles involucrados</label>
+                            <input type="text" id="input-civilians" name="involvedCivilians" value="N/A">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-victims">Víctimas</label>
+                            <input type="text" id="input-victims" name="involvedVictims" value="N/A">
+                        </div>
+                    </div>
+
+                    <!-- Evaluación: Nombre Evaluador, Calificaciones dropdown -->
+                    <div class="doc-field" data-doc-types="evaluation" id="group-eval-ratings" style="display: none;">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-evaluator-name">Nombre del Evaluador</label>
+                            <input type="text" id="input-evaluator-name" name="evaluatorName" placeholder="Ej: Sheriff Wesley Grant">
+                        </div>
+                        <div class="form-group-row" style="margin-bottom: 12px;">
+                            <div class="form-group">
+                                <label for="select-eval-conduct">Conducta y Disciplina</label>
+                                <select id="select-eval-conduct" name="evalConduct" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-light); padding: 10px 12px; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none; transition: all 0.25s ease; width: 100%;">
+                                    <option value="Excelente">Excelente</option>
+                                    <option value="Bueno" selected>Bueno</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Deficiente">Deficiente</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="select-eval-combat">Combate y Tiro</label>
+                                <select id="select-eval-combat" name="evalCombat" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-light); padding: 10px 12px; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none; transition: all 0.25s ease; width: 100%;">
+                                    <option value="Excelente">Excelente</option>
+                                    <option value="Bueno" selected>Bueno</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Deficiente">Deficiente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="select-eval-riding">Equitación y Patrulla</label>
+                                <select id="select-eval-riding" name="evalRiding" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-light); padding: 10px 12px; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none; transition: all 0.25s ease; width: 100%;">
+                                    <option value="Excelente">Excelente</option>
+                                    <option value="Bueno" selected>Bueno</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Deficiente">Deficiente</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="select-eval-laws">Conocimiento Leyes</label>
+                                <select id="select-eval-laws" name="evalLaws" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-light); padding: 10px 12px; border-radius: 6px; font-family: inherit; font-size: 14px; outline: none; transition: all 0.25s ease; width: 100%;">
+                                    <option value="Excelente">Excelente</option>
+                                    <option value="Bueno" selected>Bueno</option>
+                                    <option value="Regular">Regular</option>
+                                    <option value="Deficiente">Deficiente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Denuncia: Datos del denunciante y datos del acusado -->
+                    <div class="doc-field" data-doc-types="complaint" id="group-complaint-details" style="display: none;">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-complainant-address">Procedencia / Domicilio Denunciante</label>
+                            <input type="text" id="input-complainant-address" name="complainantAddress" placeholder="Ej: Rancho Emerald, Lemoyne">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-accused-name">Nombre / Alias del Acusado</label>
+                            <input type="text" id="input-accused-name" name="accusedName" placeholder="Ej: Arthur Morgan (alias Tex)">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-accused-desc">Descripción física del Acusado</label>
+                            <input type="text" id="input-accused-desc" name="accusedDesc" placeholder="Ej: Alto, barba espesa, sombrero negro...">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-accused-location">Paradero habitual / Ubicación</label>
+                            <input type="text" id="input-accused-location" name="accusedLocation" placeholder="Ej: Merodeando por los bosques de Cumberland">
+                        </div>
+                    </div>
+
+                    <!-- Incautación: Propietario / Sospechoso y Agentes Requisadores -->
+                    <div class="doc-field" data-doc-types="seizure" id="group-seizure-details" style="display: none;">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-seizure-owner">Propietario / Sospechoso</label>
+                            <input type="text" id="input-seizure-owner" name="seizureOwner" placeholder="Ej: Banda de los O'Driscoll">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-seizure-agents">Agentes que incautan</label>
+                            <input type="text" id="input-seizure-agents" name="seizureAgents" placeholder="Ej: Sheriff Grant, Ayudante O'Hara">
+                        </div>
+                    </div>
+
+                    <!-- Búsqueda/Arresto (Warrant): Foto, Delitos, Peligrosidad, Características -->
+                    <div class="doc-field" data-doc-types="warrant" id="group-warrant-details" style="display: none;">
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-warrant-danger">Peligrosidad / Estado</label>
+                            <input type="text" id="input-warrant-danger" name="warrantDanger" placeholder="Ej: Extremadamente Peligroso • Armado">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-warrant-crimes">Delitos Imputados</label>
+                            <input type="text" id="input-warrant-crimes" name="warrantCrimes" placeholder="Ej: Asalto a mano armada, robo de ganado...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label for="input-warrant-physical">Rasgos físicos / Vestimenta</label>
+                            <input type="text" id="input-warrant-physical" name="warrantPhysical" placeholder="Ej: Cicatriz mejilla izquierda, abrigo azul...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label>Retrato del Fugitivo (Subir Imagen)</label>
+                            <input type="file" id="input-warrant-file" accept="image/*" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-light); padding: 6px 12px; border-radius: 6px; font-family: inherit; font-size: 13px; outline: none; transition: all 0.25s ease; width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-warrant-url">O pegar URL de imagen</label>
+                            <input type="text" id="input-warrant-url" name="warrantPhotoUrl" placeholder="https://i.imgur.com/...">
+                        </div>
                     </div>
                 </section>
 
-                <!-- 4. ACTUACIONES REALIZADAS -->
+                <!-- 3. NARRATIVA DEL INFORME -->
                 <section class="form-section">
+                    <h2><span class="section-num">3.</span> Relato y Narrativa</h2>
+                    <div class="form-group">
+                        <label for="input-narrative" id="lbl-narrative">Narrativa del suceso</label>
+                        <textarea id="input-narrative" name="narrative" rows="8" placeholder="Escribe aquí los detalles del informe redactados a máquina..."></textarea>
+                    </div>
+                </section>
+
+                <!-- 4. LISTAS DINÁMICAS (Actuaciones / Pruebas / Bienes) -->
+                <!-- List 1 (Actuaciones, Puntos Fuertes, Bienes, Pruebas Denuncia) -->
+                <section class="form-section doc-field" data-doc-types="police_report,evaluation,seizure,complaint" id="group-list-1">
                     <div class="section-header-btn">
-                        <h2><span class="section-num">4.</span> Actuaciones Realizadas</h2>
+                        <h2 id="lbl-list-1-title"><span class="section-num">4.</span> Actuaciones Realizadas</h2>
                         <button type="button" id="btn-add-action" class="btn-sm">＋ Añadir</button>
                     </div>
                     <div id="actions-list-container" class="dynamic-inputs-container">
-                        <!-- Campos agregados dinámicamente por JS -->
+                        <!-- Campos agregados dinámicamente -->
                     </div>
                 </section>
 
-                <!-- 5. PRUEBAS O EVIDENCIAS RECOGIDAS -->
-                <section class="form-section">
+                <!-- List 2 (Pruebas Policía, Puntos a Mejorar Evaluación) -->
+                <section class="form-section doc-field" data-doc-types="police_report,evaluation" id="group-list-2">
                     <div class="section-header-btn">
-                        <h2><span class="section-num">5.</span> Pruebas o Evidencias Recogidas</h2>
+                        <h2 id="lbl-list-2-title"><span class="section-num">5.</span> Pruebas o Evidencias Recogidas</h2>
                         <button type="button" id="btn-add-evidence" class="btn-sm">＋ Añadir</button>
                     </div>
                     <div id="evidences-list-container" class="dynamic-inputs-container">
-                        <!-- Campos agregados dinámicamente por JS -->
+                        <!-- Campos agregados dinámicamente -->
                     </div>
                 </section>
 
-                <!-- 6. OBSERVACIONES ADICIONALES -->
-                <section class="form-section">
-                    <h2><span class="section-num">6.</span> Observaciones Adicionales</h2>
+                <!-- 5. OBSERVACIONES / DETALLES ADICIONALES -->
+                <section class="form-section doc-field" data-doc-types="police_report,evaluation,complaint,seizure" id="group-observations">
+                    <h2><span class="section-num" id="num-observations">6.</span> Observaciones Adicionales</h2>
                     <div class="form-group">
-                        <label for="input-observations">Observaciones</label>
+                        <label for="input-observations" id="lbl-observations">Observaciones</label>
                         <textarea id="input-observations" name="observations" rows="4" placeholder="Escribe recomendaciones, conclusiones o notas futuras..."></textarea>
                     </div>
                 </section>
 
-                <!-- 7. FIRMA Y AJUSTES -->
+                <!-- 6. FIRMA Y CONFIGURACIÓN DE FIRMA -->
                 <section class="form-section">
-                    <h2><span class="section-num">7.</span> Firma del Responsable</h2>
+                    <h2><span class="section-num" id="num-signatures">7.</span> Firma y Ajustes</h2>
                     <div class="form-group">
-                        <label for="input-signature-name">Nombre que firma</label>
+                        <label for="input-signature-name" id="lbl-signature-name">Nombre que firma</label>
                         <input type="text" id="input-signature-name" name="signatureName" placeholder="Ej: Wesley Grant">
                     </div>
-                    <div class="form-group">
+                    <!-- Campo Firma Secundaria (solo Denuncia) -->
+                    <div class="form-group doc-field" data-doc-types="complaint" id="group-signature-name-2" style="display: none; margin-top: 12px;">
+                        <label for="input-signature-name-2">Nombre del Denunciante (Firma)</label>
+                        <input type="text" id="input-signature-name-2" name="signatureName2" placeholder="Ej: John Doe">
+                    </div>
+                    <div class="form-group" style="margin-top: 12px;">
                         <label>Método de firma</label>
                         <div class="radio-group">
                             <label class="radio-label">
@@ -195,7 +373,23 @@
 
             <!-- Contenedor del informe impreso (A4 exacto) -->
             <div class="report-wrapper">
-                <article id="report-preview" class="report-paper">
+                <!-- PORTADA DE ARCHIVADOR / BIENVENIDA -->
+                <article id="welcome-binder" class="report-paper welcome-binder-paper" style="display: flex; flex-direction: column;">
+                    <div class="binder-embossed-border" style="border: 4px solid #634f40; height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; position: relative; border-radius: 4px;">
+                        <div class="binder-star-badge" style="font-size: 80px; color: #d4a35c; margin-bottom: 15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">⭐</div>
+                        <h2 style="font-family: 'Rye', serif; font-size: 34px; color: #d4a35c; text-align: center; margin-bottom: 10px; letter-spacing: 2px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); font-weight: normal;">REGISTROS DE LA LEY</h2>
+                        <div style="width: 150px; height: 2px; background-color: #d4a35c; margin: 10px auto 25px auto;"></div>
+                        <h4 style="font-family: 'Outfit', sans-serif; font-size: 14px; color: #a69c93; text-transform: uppercase; letter-spacing: 2.5px; text-align: center; margin-bottom: 40px; font-weight: 500;">Oficina del Sheriff • 1885</h4>
+                        
+                        <div class="binder-tag-label" style="background-color: #eddcc4; border: 3px double #1a1510; padding: 24px; width: 340px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); transform: rotate(-1.5deg); color: #1a1510; font-family: 'Special Elite', monospace; box-sizing: border-box;">
+                            <div style="font-size: 11px; font-weight: bold; letter-spacing: 1.5px; margin-bottom: 6px;">ARCHIVADOR GENERAL</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #9e2a22; border-top: 1px solid #1a1510; border-bottom: 1px solid #1a1510; padding: 6px 0; margin-top: 4px; letter-spacing: 0.5px;">EXPEDIENTES HISTÓRICOS</div>
+                            <div style="font-size: 11px; margin-top: 10px; font-style: italic; opacity: 0.85; line-height: 1.4;">Seleccione un tipo de documento en el panel izquierdo para comenzar la redacción.</div>
+                        </div>
+                    </div>
+                </article>
+
+                <article id="report-preview" class="report-paper" style="display: none;">
                     <!-- Cabecera principal -->
                     <div class="report-header">
                         <!-- Placa Sheriff izquierda -->
@@ -220,22 +414,23 @@
                         </div>
                     </div>
 
-                    <div class="report-content">
+                    <!-- TEMPLATE 1: INFORME POLICIAL -->
+                    <div id="preview-content-police_report" class="report-content-template">
                         <!-- 1. INFORMACIÓN DEL CASO -->
                         <div class="report-section">
                             <h4 class="section-title">1. INFORMACIÓN DEL CASO</h4>
                             <div class="section-fields">
                                 <div class="field-row">
                                     <span class="field-label">Fecha y hora:</span>
-                                    <span class="field-val" id="preview-date">—</span>
+                                    <span class="field-val" id="preview-date-police_report">—</span>
                                 </div>
                                 <div class="field-row">
                                     <span class="field-label">Lugar de los hechos:</span>
-                                    <span class="field-val" id="preview-location">—</span>
+                                    <span class="field-val" id="preview-location-police_report">—</span>
                                 </div>
                                 <div class="field-row">
                                     <span class="field-label">Título del informe:</span>
-                                    <span class="field-val" id="preview-title">—</span>
+                                    <span class="field-val" id="preview-title-police_report">—</span>
                                 </div>
                             </div>
                         </div>
@@ -246,19 +441,19 @@
                             <div class="section-fields">
                                 <div class="field-row">
                                     <span class="field-label">Agentes involucrados:</span>
-                                    <span class="field-val" id="preview-agents">—</span>
+                                    <span class="field-val" id="preview-agents-police_report">—</span>
                                 </div>
                                 <div class="field-row">
                                     <span class="field-label">Delincuentes involucrados:</span>
-                                    <span class="field-val" id="preview-criminals">N/A</span>
+                                    <span class="field-val" id="preview-criminals-police_report">N/A</span>
                                 </div>
                                 <div class="field-row">
                                     <span class="field-label">Civiles involucrados:</span>
-                                    <span class="field-val" id="preview-civilians">N/A</span>
+                                    <span class="field-val" id="preview-civilians-police_report">N/A</span>
                                 </div>
                                 <div class="field-row">
                                     <span class="field-label">Víctimas:</span>
-                                    <span class="field-val" id="preview-victims">N/A</span>
+                                    <span class="field-val" id="preview-victims-police_report">N/A</span>
                                 </div>
                             </div>
                         </div>
@@ -266,7 +461,7 @@
                         <!-- 3. INFORME DE LOS HECHOS -->
                         <div class="report-section">
                             <h4 class="section-title">3. INFORME DE LOS HECHOS</h4>
-                            <p class="section-text-block" id="preview-narrative">Escriba la narrativa de los hechos...</p>
+                            <p class="section-text-block" id="preview-narrative-police_report">Escriba la narrativa de los hechos...</p>
                         </div>
 
                         <!-- Grid 4 y 5 (Dos columnas) -->
@@ -274,7 +469,7 @@
                             <!-- 4. ACTUACIONES REALIZADAS -->
                             <div class="report-section col-6">
                                 <h4 class="section-title">4. ACTUACIONES REALIZADAS</h4>
-                                <ul class="section-list" id="preview-actions">
+                                <ul class="section-list" id="preview-actions-police_report">
                                     <!-- Dinámico -->
                                 </ul>
                             </div>
@@ -282,7 +477,7 @@
                             <!-- 5. PRUEBAS O EVIDENCIAS RECOGIDAS -->
                             <div class="report-section col-6">
                                 <h4 class="section-title">5. PRUEBAS O EVIDENCIAS RECOGIDAS</h4>
-                                <ul class="section-list" id="preview-evidences">
+                                <ul class="section-list" id="preview-evidences-police_report">
                                     <!-- Dinámico -->
                                 </ul>
                             </div>
@@ -291,7 +486,7 @@
                         <!-- 6. OBSERVACIONES ADICIONALES -->
                         <div class="report-section">
                             <h4 class="section-title">6. OBSERVACIONES ADICIONALES</h4>
-                            <p class="section-text-block" id="preview-observations">Sin observaciones adicionales.</p>
+                            <p class="section-text-block" id="preview-observations-police_report">Sin observaciones adicionales.</p>
                         </div>
 
                         <!-- 7. FIRMA -->
@@ -302,16 +497,425 @@
                                     <span class="signature-label">Firma del sheriff responsable:</span>
                                     <div class="signature-area">
                                         <!-- Firma tipográfica -->
-                                        <span id="preview-sig-font" class="sig-font-render">Wesley Grant</span>
+                                        <span class="sig-font-render preview-sig-font">Wesley Grant</span>
                                         <!-- Imagen de la firma dibujada -->
-                                        <img id="preview-sig-img" src="" alt="Firma" class="sig-img-render" style="display: none;">
+                                        <img class="sig-img-render preview-sig-img" src="" alt="Firma" style="display: none;">
                                     </div>
                                 </div>
                                 
                                 <!-- Sello Oficial superpuesto -->
                                 <div class="official-seal-container">
-                                    <img id="preview-seal" src="assets/seal.png" alt="Sello Oficial" class="seal-img">
+                                    <img src="assets/seal.png" alt="Sello Oficial" class="seal-img">
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEMPLATE 2: EVALUACIÓN DE AGENTE -->
+                    <div id="preview-content-evaluation" class="report-content-template" style="display: none;">
+                        <!-- 1. DATOS DE LA EVALUACIÓN -->
+                        <div class="report-section">
+                            <h4 class="section-title">1. DATOS DE LA EVALUACIÓN</h4>
+                            <div class="section-fields">
+                                <div class="field-row">
+                                    <span class="field-label">Fecha de Evaluación:</span>
+                                    <span class="field-val" id="preview-date-evaluation">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Agente Evaluado:</span>
+                                    <span class="field-val" id="preview-title-evaluation">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Rango / Cargo actual:</span>
+                                    <span class="field-val" id="preview-subtitle-evaluation">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Agente Evaluador:</span>
+                                    <span class="field-val" id="preview-agents-evaluation">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. CALIFICACIÓN DE APTITUDES -->
+                        <div class="report-section">
+                            <h4 class="section-title">2. CALIFICACIÓN DE APTITUDES</h4>
+                            <table class="evaluation-table" style="width: 100%; border-collapse: collapse; margin-top: 6px; font-family: inherit; font-size: 12px; border: 1px solid #1a1510;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid #1a1510; text-align: left; background-color: rgba(0,0,0,0.05);">
+                                        <th style="padding: 6px; border-right: 1px solid #1a1510; font-weight: bold;">APTITUD EVALUADA</th>
+                                        <th style="padding: 6px; font-weight: bold; text-align: center;">CALIFICACIÓN</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid #1a1510;">
+                                        <td style="padding: 5px; border-right: 1px solid #1a1510; font-weight: bold;">Conducta y Disciplina</td>
+                                        <td style="padding: 5px; text-align: center;" id="preview-eval-conduct">—</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #1a1510;">
+                                        <td style="padding: 5px; border-right: 1px solid #1a1510; font-weight: bold;">Habilidad de Combate y Tiro</td>
+                                        <td style="padding: 5px; text-align: center;" id="preview-eval-combat">—</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #1a1510;">
+                                        <td style="padding: 5px; border-right: 1px solid #1a1510; font-weight: bold;">Equitación y Patrullaje</td>
+                                        <td style="padding: 5px; text-align: center;" id="preview-eval-riding">—</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #1a1510;">
+                                        <td style="padding: 5px; border-right: 1px solid #1a1510; font-weight: bold;">Conocimiento de las Leyes</td>
+                                        <td style="padding: 5px; text-align: center;" id="preview-eval-laws">—</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 3. DESEMPEÑO GENERAL -->
+                        <div class="report-section">
+                            <h4 class="section-title">3. EVALUACIÓN DEL DESEMPEÑO</h4>
+                            <p class="section-text-block" id="preview-narrative-evaluation">Sin detalles de desempeño...</p>
+                        </div>
+
+                        <!-- 4. PUNTOS FUERTES Y DEBILIDADES -->
+                        <div class="report-two-columns">
+                            <div class="report-section col-6">
+                                <h4 class="section-title">4. ASPECTOS DESTACADOS</h4>
+                                <ul class="section-list" id="preview-actions-evaluation">
+                                    <!-- Dinámico -->
+                                </ul>
+                            </div>
+                            <div class="report-section col-6">
+                                <h4 class="section-title">5. ASPECTOS A MEJORAR</h4>
+                                <ul class="section-list" id="preview-evidences-evaluation">
+                                    <!-- Dinámico -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- 5. VEREDICTO FINAL -->
+                        <div class="report-section">
+                            <h4 class="section-title">6. VEREDICTO / RESOLUCIÓN</h4>
+                            <p class="section-text-block" id="preview-observations-evaluation" style="font-weight: bold; text-transform: uppercase;">—</p>
+                        </div>
+
+                        <!-- 6. FIRMAS -->
+                        <div class="report-section report-signature-section">
+                            <h4 class="section-title">7. VALIDACIÓN DE LA EVALUACIÓN</h4>
+                            <div class="signature-block">
+                                <div class="signature-line-container">
+                                    <span class="signature-label">Firma del evaluador responsable:</span>
+                                    <div class="signature-area">
+                                        <span class="sig-font-render preview-sig-font">Wesley Grant</span>
+                                        <img class="sig-img-render preview-sig-img" src="" alt="Firma" style="display: none;">
+                                    </div>
+                                </div>
+                                <div class="official-seal-container">
+                                    <img src="assets/seal.png" alt="Sello Oficial" class="seal-img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEMPLATE 3: DENUNCIA CIUDADANA -->
+                    <div id="preview-content-complaint" class="report-content-template" style="display: none;">
+                        <!-- 1. DATOS DEL DENUNCIANTE -->
+                        <div class="report-section">
+                            <h4 class="section-title">1. INFORMACIÓN DEL DENUNCIANTE</h4>
+                            <div class="section-fields">
+                                <div class="field-row">
+                                    <span class="field-label">Nombre del Denunciante:</span>
+                                    <span class="field-val" id="preview-complainant-name">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Procedencia / Domicilio:</span>
+                                    <span class="field-val" id="preview-civilians-complaint">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Fecha del Suceso:</span>
+                                    <span class="field-val" id="preview-date-complaint">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Lugar del Suceso:</span>
+                                    <span class="field-val" id="preview-location-complaint">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. DATOS DEL SOSPECHOSO -->
+                        <div class="report-section">
+                            <h4 class="section-title">2. IDENTIFICACIÓN DEL ACUSADO / SOSPECHOSO</h4>
+                            <div class="section-fields">
+                                <div class="field-row">
+                                    <span class="field-label">Nombre / Alias:</span>
+                                    <span class="field-val" id="preview-accused-name">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Descripción Física:</span>
+                                    <span class="field-val" id="preview-accused-desc">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Paradero habitual:</span>
+                                    <span class="field-val" id="preview-accused-location">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. RELATO DE LOS HECHOS -->
+                        <div class="report-section">
+                            <h4 class="section-title">3. RELATO Y NARRATIVA DEL DENUNCIANTE</h4>
+                            <p class="section-text-block" id="preview-narrative-complaint">Escriba el relato de los hechos...</p>
+                        </div>
+
+                        <!-- 4. PRUEBAS APORTADAS -->
+                        <div class="report-section">
+                            <h4 class="section-title">4. PRUEBAS O TESTIGOS APORTADOS</h4>
+                            <ul class="section-list" id="preview-actions-complaint">
+                                <!-- Dinámico -->
+                            </ul>
+                        </div>
+
+                        <!-- 5. MEDIDAS SOLICITADAS -->
+                        <div class="report-section">
+                            <h4 class="section-title">5. MEDIDAS O PETICIONES SOLICITADAS</h4>
+                            <p class="section-text-block" id="preview-observations-complaint">Ninguna especificada.</p>
+                        </div>
+
+                        <!-- 6. DOBLE FIRMA DE CONFORMIDAD -->
+                        <div class="report-section report-signature-section" style="margin-top: auto;">
+                            <h4 class="section-title">6. FIRMAS Y CONFORMIDAD</h4>
+                            
+                            <!-- Doble línea de firmas: Denunciante (Izquierda), Agente (Derecha) -->
+                            <div class="dual-signatures-wrapper" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 15px; position: relative;">
+                                <!-- Firma Denunciante (izquierda) -->
+                                <div class="signature-line-container" style="width: 45%; border-bottom: 1px solid #1a1510; padding-bottom: 4px; display: flex; flex-direction: column; align-items: center; position: relative;">
+                                    <div class="signature-area" style="height: 50px; display: flex; align-items: flex-end; justify-content: center; width: 100%;">
+                                        <span id="preview-sig-font-denunciante" class="sig-font-render" style="font-size: 28px; line-height: 1.1; margin-bottom: -5px;">—</span>
+                                    </div>
+                                    <span class="signature-label" style="font-size: 10px; margin-top: 4px; font-weight: bold; border-top: 1px dashed rgba(26,21,16,0.3); width: 100%; text-align: center; padding-top: 2px;">FIRMA DEL DENUNCIANTE</span>
+                                </div>
+                                
+                                <!-- Firma Sheriff (derecha) -->
+                                <div class="signature-line-container" style="width: 45%; border-bottom: 1px solid #1a1510; padding-bottom: 4px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2;">
+                                    <div class="signature-area" style="height: 50px; display: flex; align-items: flex-end; justify-content: center; width: 100%;">
+                                        <span class="sig-font-render preview-sig-font" style="font-size: 28px; line-height: 1.1; margin-bottom: -5px;">Wesley Grant</span>
+                                        <img class="sig-img-render preview-sig-img" src="" alt="Firma" style="display: none; max-height: 50px;">
+                                    </div>
+                                    <span class="signature-label" style="font-size: 10px; margin-top: 4px; font-weight: bold; border-top: 1px dashed rgba(26,21,16,0.3); width: 100%; text-align: center; padding-top: 2px;">AGENTE RECEPTOR (OF. SHERIFF)</span>
+                                </div>
+                                
+                                <!-- Sello Oficial superpuesto cerca de la firma del agente -->
+                                <div class="official-seal-container" style="right: 0px; bottom: -5px; width: 90px; height: 90px;">
+                                    <img src="assets/seal.png" alt="Sello Oficial" class="seal-img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEMPLATE 4: ACTA DE INCAUTACIÓN -->
+                    <div id="preview-content-seizure" class="report-content-template" style="display: none;">
+                        <!-- 1. DATOS DE LA INCAUTACIÓN -->
+                        <div class="report-section">
+                            <h4 class="section-title">1. DATOS DE LA ACTUACIÓN</h4>
+                            <div class="section-fields">
+                                <div class="field-row">
+                                    <span class="field-label">Fecha y Hora:</span>
+                                    <span class="field-val" id="preview-date-seizure">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Lugar de los hechos:</span>
+                                    <span class="field-val" id="preview-location-seizure">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Propietario / Sospechoso:</span>
+                                    <span class="field-val" id="preview-criminals-seizure">—</span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-label">Agentes intervinientes:</span>
+                                    <span class="field-val" id="preview-agents-seizure">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. BIENES INCAUTADOS -->
+                        <div class="report-section">
+                            <h4 class="section-title">2. RELACIÓN DE BIENES INCAUTADOS</h4>
+                            <ul class="section-list" id="preview-actions-seizure">
+                                <!-- Dinámico -->
+                            </ul>
+                        </div>
+
+                        <!-- 3. NARRATIVA DE LA INTERVENCIÓN -->
+                        <div class="report-section">
+                            <h4 class="section-title">3. NARRATIVA DEL DECOMISO</h4>
+                            <p class="section-text-block" id="preview-narrative-seizure">Detalles del procedimiento de incautación...</p>
+                        </div>
+
+                        <!-- 4. DESTINO DE LOS BIENES -->
+                        <div class="report-section">
+                            <h4 class="section-title">4. DESTINO FINAL DE LO CONFISCADO</h4>
+                            <p class="section-text-block" id="preview-observations-seizure">—</p>
+                        </div>
+
+                        <!-- 5. FIRMA -->
+                        <div class="report-section report-signature-section" style="margin-top: auto;">
+                            <h4 class="section-title">5. CERTIFICACIÓN DEL REGISTRO</h4>
+                            <div class="signature-block">
+                                <div class="signature-line-container">
+                                    <span class="signature-label">Firma del agente registrador:</span>
+                                    <div class="signature-area">
+                                        <span class="sig-font-render preview-sig-font">Wesley Grant</span>
+                                        <img class="sig-img-render preview-sig-img" src="" alt="Firma" style="display: none;">
+                                    </div>
+                                </div>
+                                <div class="official-seal-container">
+                                    <img src="assets/seal.png" alt="Sello Oficial" class="seal-img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEMPLATE 5: ORDEN DE ARRESTO / WANTED -->
+                    <div id="preview-content-warrant" class="report-content-template" style="display: none;">
+                        <!-- WANTED HEADER -->
+                        <div class="wanted-header-container" style="text-align: center; margin-bottom: 20px;">
+                            <div class="wanted-county-text" style="font-size: 16px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; font-family: 'Rye', serif;">WANTED</div>
+                            <div class="wanted-main-banner" style="font-family: 'Rye', serif; font-size: 54px; line-height: 1; letter-spacing: 4px; margin: 4px 0; font-weight: bold; border-top: 4px solid #1a1510; border-bottom: 4px solid #1a1510; padding: 6px 0;">SE BUSCA</div>
+                            <div class="wanted-sub-banner" style="font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">DE ORDEN DE LA OFICINA DEL SHERIFF • TERRITORIO HISTÓRICO</div>
+                        </div>
+
+                        <!-- GRID CENTRAL (MUGSHOT + DETALLES GENERALES) -->
+                        <div class="wanted-grid-layout" style="display: flex; gap: 30px; margin-bottom: 20px;">
+                            <!-- Retrato Mugshot (Izquierda) -->
+                            <div class="wanted-portrait-box" style="width: 230px; height: 260px; border: 4px solid #1a1510; box-shadow: inset 0 0 20px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.05); position: relative; overflow: hidden; flex-shrink: 0;">
+                                <img id="preview-warrant-img" src="assets/badge.png" alt="Fugitivo" style="width: 100%; height: 100%; object-fit: cover; filter: sepia(0.85) contrast(1.35) brightness(0.85) grayscale(0.2) blur(0.2px);">
+                                <div id="preview-warrant-photo-placeholder" style="display: none; text-align: center; font-size: 11px; color: rgba(26,21,16,0.6); padding: 20px; font-weight: bold;">SIN RETRATO DISPONIBLE</div>
+                            </div>
+
+                            <!-- Detalles Principales (Derecha) -->
+                            <div class="wanted-details-box" style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center;">
+                                <div class="wanted-field">
+                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 1px; color: rgba(26,21,16,0.7); text-transform: uppercase;">IDENTIDAD / ALIAS</div>
+                                    <div id="preview-warrant-name" style="font-size: 20px; font-weight: bold; border-bottom: 2px solid #1a1510; padding-bottom: 2px; text-transform: uppercase;">—</div>
+                                </div>
+                                <div class="wanted-field">
+                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 1px; color: rgba(26,21,16,0.7); text-transform: uppercase;">DELITOS ACUSADOS</div>
+                                    <div id="preview-warrant-crimes" style="font-size: 13px; font-weight: bold; color: #9e2a22; line-height: 1.3;">—</div>
+                                </div>
+                                <div class="wanted-field">
+                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 1px; color: rgba(26,21,16,0.7); text-transform: uppercase;">PELIGROSIDAD</div>
+                                    <div id="preview-warrant-danger" style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">—</div>
+                                </div>
+                                <div class="wanted-field">
+                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 1px; color: rgba(26,21,16,0.7); text-transform: uppercase;">ÚLTIMA VEZ VISTO</div>
+                                    <div id="preview-warrant-location" style="font-size: 12px; font-weight: bold;">—</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DESCRIPCIÓN FÍSICA -->
+                        <div class="report-section" style="margin-bottom: 15px;">
+                            <h4 class="section-title" style="font-size: 12px;">DESCRIPCIÓN FÍSICA Y RASGOS</h4>
+                            <p class="section-text-block" id="preview-warrant-physical" style="text-indent: 0;">—</p>
+                        </div>
+
+                        <!-- INSTRUCCIONES DE CAPTURA -->
+                        <div class="report-section" style="margin-bottom: 20px;">
+                            <h4 class="section-title" style="font-size: 12px;">INSTRUCCIONES PARA SU CAPTURA</h4>
+                            <p class="section-text-block" id="preview-narrative-warrant" style="text-indent: 0;">—</p>
+                        </div>
+
+                        <!-- CAJA DE RECOMPENSA MÁXIMA -->
+                        <div class="wanted-reward-container" style="border: 6px double #1a1510; text-align: center; padding: 12px; margin-top: auto; margin-bottom: 15px; background-color: rgba(255, 255, 255, 0.15);">
+                            <div style="font-size: 12px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">SE OFRECE RECOMPENSA DE</div>
+                            <div id="preview-warrant-reward" style="font-family: 'Rye', serif; font-size: 38px; font-weight: bold; color: #9e2a22; margin: 4px 0;">$0.00 ORO</div>
+                            <div style="font-size: 9px; font-weight: bold; letter-spacing: 0.5px;">POR INFORMACIÓN QUE CONDUZCA A SU CAPTURA DEBIDAMENTE COMPROBADA</div>
+                        </div>
+
+                        <!-- FIRMA JUEZ/SHERIFF Y SELLO -->
+                        <div class="wanted-bottom-signatures" style="display: flex; justify-content: space-between; align-items: flex-end; height: 70px; font-size: 11px;">
+                            <div style="font-size: 9px; font-weight: bold;">
+                                EMITIDO EL: <span id="preview-date-warrant">—</span><br>
+                                BAJO EL N.º REGISTRO: <span id="preview-reg-num-warrant">—</span>
+                            </div>
+                            <div class="signature-line-container" style="width: 250px; border-bottom: 1px solid #1a1510; padding-bottom: 4px; display: flex; align-items: flex-end; gap: 8px; position: relative; z-index: 2;">
+                                <span class="signature-label" style="font-size: 9px;">Sheriff:</span>
+                                <div class="signature-area" style="height: 50px; display: flex; align-items: flex-end; justify-content: center; flex-grow: 1;">
+                                    <span class="sig-font-render preview-sig-font" style="font-size: 26px;">Wesley Grant</span>
+                                    <img class="sig-img-render preview-sig-img" src="" alt="Firma" style="display: none; max-height: 50px;">
+                                </div>
+                                <div class="official-seal-container" style="right: -20px; bottom: -15px; width: 80px; height: 80px;">
+                                    <img src="assets/seal.png" alt="Sello Oficial" class="seal-img">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- HOJA DE INFORMACIÓN / LICENCIA -->
+                <article class="report-paper info-paper" style="font-family: 'Special Elite', monospace; font-size: 13px; line-height: 1.4; display: none; flex-direction: column;">
+                    <div class="report-header info-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                        <div class="report-badge-container" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                            <img src="assets/badge.png" alt="Placa Sheriff" class="badge-img" style="max-width: 100%; max-height: 100%; object-fit: contain; opacity: 0.65;">
+                        </div>
+                        <div class="report-title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
+                            <h2 style="font-family: 'Rye', serif; font-size: 24px; font-weight: normal; color: #1a1510; margin-bottom: 2px;">MANUAL DE USO</h2>
+                            <div class="header-divider-fancy" style="width: 90%; height: 6px; background: radial-gradient(circle, #2c2520 20%, transparent 20%), linear-gradient(90deg, transparent 45%, #2c2520 45%, #2c2520 55%, transparent 55%); background-size: 10px 6px, 100% 2px; background-position: center; background-repeat: no-repeat; margin: 4px auto;"></div>
+                            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #1a1510; padding: 2px 8px; display: inline-block; margin-top: 4px;">LICENCIA DE LA OFICINA</span>
+                        </div>
+                    </div>
+
+                    <div class="report-content" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;">
+                        <!-- 1. AUTORÍA Y CREADOR -->
+                        <div class="report-section" style="width: 100%;">
+                            <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">1. CRÉDITOS Y PROPIEDAD</h4>
+                            <div class="section-fields" style="display: flex; flex-direction: column; gap: 4px;">
+                                <div class="field-row" style="display: flex;">
+                                    <span class="field-label" style="font-weight: bold; width: 120px;">Creador:</span>
+                                    <span class="field-val" style="font-weight: bold; color: #9e2a22;">ZaaK</span>
+                                </div>
+                                <div class="field-row" style="display: flex;">
+                                    <span class="field-label" style="font-weight: bold; width: 120px;">Licencia:</span>
+                                    <span class="field-val">Código Abierto (Open Source)</span>
+                                </div>
+                                <div class="field-row" style="display: flex;">
+                                    <span class="field-label" style="font-weight: bold; width: 120px;">Uso:</span>
+                                    <span class="field-val">Libre y Gratuito para Servidores</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. TÉRMINOS Y CONDICIONES (IMPORTANTE) -->
+                        <div class="report-section" style="width: 100%;">
+                            <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">2. TÉRMINOS DE USO</h4>
+                            <p class="section-text-block" style="text-indent: 0; text-align: justify; margin-bottom: 6px;">
+                                Esta herramienta ha sido desarrollada con fines recreativos y de rol para comunidades de **RedM Roleplay** (época 1885). Su distribución está sujeta a:
+                            </p>
+                            <ul class="section-list" style="list-style-type: none; display: flex; flex-direction: column; gap: 4px;">
+                                <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong style="color: #9e2a22;">Reconocimiento:</strong> Debe mantenerse siempre la atribución original del creador (<strong>ZaaK</strong>) de forma visible en el código o web.</li>
+                                <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong style="color: #9e2a22;">No Comercial:</strong> Queda terminantemente prohibida la venta, reventa o monetización comercial directa de esta herramienta o derivados.</li>
+                                <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong>Libre Uso:</strong> Libre modificación para adaptarla a la ambientación o necesidades específicas de tu servidor.</li>
+                            </ul>
+                        </div>
+
+                        <!-- 3. GUÍA DE FUNCIONAMIENTO -->
+                        <div class="report-section" style="width: 100%;">
+                            <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">3. GUÍA RÁPIDA</h4>
+                            <ul class="section-list" style="list-style-type: none; display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>0. Documento:</strong> Selecciona el tipo de documento del menú desplegable del panel de control.</li>
+                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>1. Rellenar:</strong> Completa los campos del panel izquierdo. Los cambios se actualizan al instante.</li>
+                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>2. Retratos:</strong> En WANTED posters, sube una imagen local o pega una URL para aplicar filtros de daguerrotipo.</li>
+                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>3. Firmar:</strong> Selecciona firma de caligrafía automática o dibújala con el ratón o pantalla táctil.</li>
+                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>4. Exportar:</strong> Descarga PNG, PDF/Imprime (A4) o copia el Markdown formateado para Discord.</li>
+                            </ul>
+                        </div>
+
+                        <!-- SELLO DE LICENCIA -->
+                        <div class="report-section report-signature-section" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(26,21,16,0.3); text-align: center; position: relative;">
+                            <div style="font-size: 10px; font-style: italic; opacity: 0.8;">
+                                "Sheriff Report Maker es software libre de uso público"
+                            </div>
+                            <div style="font-size: 9px; opacity: 0.6; margin-top: 2px;">
+                                Creado por ZaaK • Territorios de RedM Roleplay
+                            </div>
+                            <div class="official-seal-container" style="right: 15px; bottom: 0px; width: 75px; height: 75px; opacity: 0.65; position: absolute; pointer-events: none;">
+                                <img src="assets/seal.png" alt="Sello" class="seal-img" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; transform: rotate(8deg);">
                             </div>
                         </div>
                     </div>

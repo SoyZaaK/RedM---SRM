@@ -29,25 +29,102 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Estado de la aplicación
-    let state = {
-        regNum: 'INF-POL-0',
-        subtitle: 'Posible Contratación de Pistoleros',
-        caseDate: '',
-        caseLocation: '',
-        caseTitle: '',
-        involvedAgents: '',
-        involvedCriminals: 'N/A',
-        involvedCivilians: 'N/A',
-        involvedVictims: 'N/A',
-        narrative: '',
-        actions: [''],
-        evidences: [''],
-        observations: '',
-        signatureName: 'Wesley Grant',
-        sigMethod: 'font',
-        sigDrawing: null
+    // ==========================================
+    // CONFIGURACIÓN Y CONSTANTES DE TIPOS DE DOCUMENTO
+    // ==========================================
+    const DOC_PREFIXES = {
+        police_report: 'INF-POL-',
+        evaluation: 'EVAL-',
+        complaint: 'DEN-',
+        seizure: 'ACT-INC-',
+        warrant: 'ORD-ARR-'
     };
+
+    const DOC_DEFAULTS = {
+        police_report: {
+            subtitle: 'Posible Contratación de Pistoleros',
+            caseTitle: 'Posible contratación irregular de personal armado...',
+            narrative: 'Escribe aquí los detalles del informe redactados a máquina...',
+            observations: 'Sin observaciones adicionales.'
+        },
+        evaluation: {
+            subtitle: 'Rango: Recluta',
+            caseTitle: 'Wesley Grant',
+            narrative: 'El agente en evaluación ha demostrado un comportamiento ejemplar durante las patrullas en Valentine. Su desempeño general es óptimo.',
+            observations: 'APROBADO CON RECOMENDACIÓN DE ASCENSO'
+        },
+        complaint: {
+            subtitle: 'Estado: Pendiente de Investigación',
+            caseTitle: 'Arthur Doe',
+            narrative: 'El denunciante manifiesta que el día de ayer, aproximadamente a las seis de la tarde, fue abordado por un sujeto armado en los senderos de Dakota River...',
+            observations: 'Se solicita patrullaje preventivo en las inmediaciones del río.'
+        },
+        seizure: {
+            subtitle: 'Bienes: Armas y Contrabando',
+            caseTitle: 'Banda de los O\'Driscoll',
+            narrative: 'Tras una inspección rutinaria en una carreta sospechosa al norte de Strawberry, se procedió al registro hallando mercancía no declarada y armamento sin licencia...',
+            observations: 'Los bienes incautados quedan guardados bajo llave en el almacén de la oficina.'
+        },
+        warrant: {
+            subtitle: '$50.00 ORO',
+            caseTitle: 'Dutch van der Linde',
+            narrative: 'Se busca vivo o muerto. Entregar a cualquier oficial de la ley en el Territorio. Se desaconseja intentar su captura en solitario.',
+            observations: ''
+        }
+    };
+
+    const defaultState = (type, counter) => {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const defaultDateStr = `${dd}/${mm}/1885`;
+        
+        const prefix = DOC_PREFIXES[type] || 'INF-';
+        const defs = DOC_DEFAULTS[type] || {};
+
+        return {
+            docType: type,
+            regNum: `${prefix}${counter}`,
+            subtitle: defs.subtitle || '',
+            caseDate: defaultDateStr,
+            caseLocation: type === 'evaluation' ? '' : 'Valentine, New Hanover',
+            caseTitle: defs.caseTitle || '',
+            involvedAgents: '',
+            involvedCriminals: 'N/A',
+            involvedCivilians: 'N/A',
+            involvedVictims: 'N/A',
+            narrative: defs.narrative || '',
+            actions: [''],
+            evidences: [''],
+            observations: defs.observations || '',
+            signatureName: 'Wesley Grant',
+            sigMethod: 'font',
+            sigDrawing: null,
+            
+            // Campos específicos
+            evaluatorName: 'Wesley Grant',
+            evalConduct: 'Bueno',
+            evalCombat: 'Bueno',
+            evalRiding: 'Bueno',
+            evalLaws: 'Bueno',
+            complainantAddress: 'Rancho Emerald, New Hanover',
+            accusedName: 'Sujeto Desconocido',
+            accusedDesc: 'Sombrero negro, abrigo marrón, cicatriz en la mejilla.',
+            accusedLocation: 'Merodeando por los bosques de Cumberland',
+            seizureOwner: 'Desconocido',
+            seizureAgents: 'Sheriff Grant',
+            warrantCrimes: 'Asalto al tren de Cornwall, robo de ganado y desacato',
+            warrantPhysical: 'Estatura media, barba canosa, viste chaleco elegante y sombrero negro.',
+            warrantDanger: 'Extremadamente Peligroso • Armado',
+            warrantPhotoUrl: '',
+            warrantPhotoData: null,
+            signatureName2: 'Arthur Doe',
+            recipientAgent: 'Wesley Grant'
+        };
+    };
+
+    // Estado activo
+    let state = {};
 
     // Elementos del DOM - Formulario
     const form = document.getElementById('report-form');
@@ -82,19 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos del DOM - Vista Previa
     const prevRegNum = document.getElementById('preview-reg-num');
     const prevSubtitle = document.getElementById('preview-subtitle');
-    const prevDate = document.getElementById('preview-date');
-    const prevLocation = document.getElementById('preview-location');
-    const prevTitle = document.getElementById('preview-title');
-    const prevAgents = document.getElementById('preview-agents');
-    const prevCriminals = document.getElementById('preview-criminals');
-    const prevCivilians = document.getElementById('preview-civilians');
-    const prevVictims = document.getElementById('preview-victims');
-    const prevNarrative = document.getElementById('preview-narrative');
-    const prevObservations = document.getElementById('preview-observations');
-    const prevActions = document.getElementById('preview-actions');
-    const prevEvidences = document.getElementById('preview-evidences');
-    const prevSigFont = document.getElementById('preview-sig-font');
-    const prevSigImg = document.getElementById('preview-sig-img');
 
     // Discord Webhook DOM
     const inputWebhookUrl = document.getElementById('input-webhook-url');
@@ -113,43 +177,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
 
     function init() {
-        // Cargar contador de registros de forma segura
-        let currentCounter = safeStorage.getItem('sheriff_report_counter');
-        if (currentCounter === null) {
-            safeStorage.setItem('sheriff_report_counter', '0');
-            currentCounter = '0';
+        // Cargar tipo activo
+        let activeType = safeStorage.getItem('sheriff_report_active_type');
+        if (!activeType) {
+            activeType = 'none';
+            safeStorage.setItem('sheriff_report_active_type', 'none');
         }
-        
-        // Formatear fecha por defecto
-        const today = new Date();
-        const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const defaultDateStr = `${dd}/${mm}/1885`;
-        
-        // Datos por defecto iniciales limpios
-        state.caseDate = defaultDateStr;
-        state.regNum = `INF-POL-${currentCounter}`;
-        
-        state.caseLocation = '';
-        state.caseTitle = '';
-        state.involvedAgents = '';
-        state.involvedCriminals = 'N/A';
-        state.involvedCivilians = 'N/A';
-        state.involvedVictims = 'N/A';
-        state.narrative = '';
-        state.actions = [''];
-        state.evidences = [''];
-        state.observations = '';
-        state.signatureName = 'Wesley Grant';
 
-        // Intentar recuperar borrador guardado
-        const savedDraft = safeStorage.getItem('sheriff_report_draft');
-        if (savedDraft) {
-            try {
-                const parsed = JSON.parse(savedDraft);
-                state = { ...state, ...parsed };
-            } catch (e) {
-                console.error("Error al cargar el borrador", e);
+        if (activeType === 'none') {
+            state = { docType: 'none' };
+        } else {
+            // Cargar borrador para el tipo activo
+            const savedDraft = safeStorage.getItem('sheriff_report_draft_' + activeType);
+            if (savedDraft) {
+                try {
+                    state = JSON.parse(savedDraft);
+                } catch (e) {
+                    console.error("Error al cargar borrador", e);
+                    initializeDefaultStateForType(activeType);
+                }
+            } else {
+                initializeDefaultStateForType(activeType);
             }
         }
 
@@ -164,36 +212,360 @@ document.addEventListener('DOMContentLoaded', () => {
             chkAutoWebhook.checked = true; // Activado por defecto
         }
 
-        // Rellenar formulario
+        // Rellenar formulario e interactuar con DOM
+        updateFormVisibility();
         updateFormInputs();
         
         // Renderizar listas dinámicas
-        renderDynamicInputs('actions');
-        renderDynamicInputs('evidences');
+        if (state.docType !== 'none') {
+            renderDynamicInputs('actions');
+            renderDynamicInputs('evidences');
+        }
         
         // Configurar firma canvas
         setupSignatureCanvas();
+
+        // Configurar escuchadores condicionales para Wanted Photo y Document Selector
+        setupSpecialInputs();
+
+        // Actualizar firma canvas dibujada si existía
+        if (state.docType !== 'none' && state.sigMethod === 'draw' && state.sigDrawing) {
+            const img = new Image();
+            img.onload = () => {
+                ctxSig.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+                ctxSig.drawImage(img, 0, 0);
+            };
+            img.src = state.sigDrawing;
+        }
 
         // Actualizar vista previa
         updatePreview();
     }
 
+    function initializeDefaultStateForType(type) {
+        let counter = safeStorage.getItem('sheriff_report_counter_' + type);
+        if (counter === null) {
+            safeStorage.setItem('sheriff_report_counter_' + type, '0');
+            counter = '0';
+        }
+        state = defaultState(type, counter);
+    }
+
+    function setupSpecialInputs() {
+        const inputDocType = document.getElementById('input-doc-type');
+        if (inputDocType) {
+            inputDocType.addEventListener('change', (e) => {
+                const newType = e.target.value;
+                if (newType !== state.docType) {
+                    switchDocumentType(newType);
+                }
+            });
+        }
+
+        // Registrar clics en las tarjetas del selector
+        const selectorCards = document.querySelectorAll('.selector-card');
+        selectorCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const type = card.getAttribute('data-type');
+                if (type) {
+                    switchDocumentType(type);
+                }
+            });
+        });
+
+        // Registrar clic en botón volver al selector
+        const btnBackToSelector = document.getElementById('btn-back-to-selector');
+        if (btnBackToSelector) {
+            btnBackToSelector.addEventListener('click', () => {
+                saveDraft();
+                state = { docType: 'none' };
+                safeStorage.setItem('sheriff_report_active_type', 'none');
+                updateFormVisibility();
+            });
+        }
+
+        const inputWarrantFile = document.getElementById('input-warrant-file');
+        if (inputWarrantFile) {
+            inputWarrantFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        state.warrantPhotoData = event.target.result;
+                        state.warrantPhotoUrl = ''; // Limpiar URL si se sube archivo
+                        const urlInput = document.getElementById('input-warrant-url');
+                        if (urlInput) urlInput.value = '';
+                        saveDraft();
+                        updatePreview();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        const inputWarrantUrl = document.getElementById('input-warrant-url');
+        if (inputWarrantUrl) {
+            inputWarrantUrl.addEventListener('input', () => {
+                state.warrantPhotoData = null; // Limpiar archivo si se pega URL
+                const fileInput = document.getElementById('input-warrant-file');
+                if (fileInput) fileInput.value = '';
+            });
+        }
+    }
+
+    function switchDocumentType(newType) {
+        // Guardar actual
+        saveDraft();
+
+        // Cargar o inicializar nuevo
+        const savedDraft = safeStorage.getItem('sheriff_report_draft_' + newType);
+        if (savedDraft) {
+            try {
+                state = JSON.parse(savedDraft);
+            } catch (e) {
+                console.error("Error al cargar borrador", e);
+                initializeDefaultStateForType(newType);
+            }
+        } else {
+            initializeDefaultStateForType(newType);
+        }
+
+        safeStorage.setItem('sheriff_report_active_type', newType);
+
+        // Actualizar DOM e interfaces
+        updateFormVisibility();
+        updateFormInputs();
+        renderDynamicInputs('actions');
+        renderDynamicInputs('evidences');
+
+        // Limpiar o cargar canvas
+        ctxSig.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        if (state.sigMethod === 'draw' && state.sigDrawing) {
+            const img = new Image();
+            img.onload = () => {
+                ctxSig.drawImage(img, 0, 0);
+            };
+            img.src = state.sigDrawing;
+        }
+
+        updatePreview();
+    }
+
+    // Actualiza visibilidad de inputs en el panel izquierdo según el tipo de reporte
+    function updateFormVisibility() {
+        const docType = state.docType;
+        
+        const selectorScreen = document.getElementById('document-selector-screen');
+        const reportForm = document.getElementById('report-form');
+        const panelActions = document.querySelector('.panel-actions');
+        const welcomeBinder = document.getElementById('welcome-binder');
+        const reportPreview = document.getElementById('report-preview');
+        const infoPaper = document.querySelector('.info-paper');
+
+        if (docType === 'none') {
+            if (selectorScreen) selectorScreen.style.display = 'flex';
+            if (reportForm) reportForm.style.display = 'none';
+            if (panelActions) panelActions.style.display = 'none';
+            if (welcomeBinder) welcomeBinder.style.display = 'flex';
+            if (reportPreview) reportPreview.style.display = 'none';
+            if (infoPaper) infoPaper.style.display = 'none';
+            return;
+        }
+
+        if (selectorScreen) selectorScreen.style.display = 'none';
+        if (reportForm) reportForm.style.display = 'flex';
+        if (panelActions) panelActions.style.display = 'flex';
+        if (welcomeBinder) welcomeBinder.style.display = 'none';
+        if (reportPreview) reportPreview.style.display = 'flex';
+        if (infoPaper) infoPaper.style.display = 'flex';
+
+        // Actualizar etiqueta del badge de tipo activo
+        const badge = document.getElementById('active-document-badge');
+        if (badge) {
+            let label = 'DOCUMENTO';
+            if (docType === 'police_report') label = 'Informe Policial';
+            else if (docType === 'evaluation') label = 'Evaluación Agente';
+            else if (docType === 'complaint') label = 'Denuncia Ciudadana';
+            else if (docType === 'seizure') label = 'Incautación';
+            else if (docType === 'warrant') label = 'Wanted / Se Busca';
+            badge.textContent = label.toUpperCase();
+        }
+
+        // Mostrar/ocultar inputs marcados con data-doc-types
+        document.querySelectorAll('.doc-field').forEach(el => {
+            const types = el.getAttribute('data-doc-types');
+            if (types && types.split(',').includes(docType)) {
+                el.style.display = '';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        // Modificar etiquetas de inputs comunes
+        const lblSubtitle = document.getElementById('lbl-subtitle');
+        const lblDate = document.getElementById('lbl-date');
+        const lblLocation = document.getElementById('lbl-location');
+        const lblTitle = document.getElementById('lbl-title');
+        const lblNarrative = document.getElementById('lbl-narrative');
+        const lblList1Title = document.getElementById('lbl-list-1-title');
+        const lblList2Title = document.getElementById('lbl-list-2-title');
+        const lblObservations = document.getElementById('lbl-observations');
+        const numObservations = document.getElementById('num-observations');
+        const numSignatures = document.getElementById('num-signatures');
+        const lblSignatureName = document.getElementById('lbl-signature-name');
+
+        if (docType === 'police_report') {
+            lblSubtitle.textContent = 'Asunto / Estado';
+            lblDate.textContent = 'Fecha y Hora';
+            lblLocation.textContent = 'Lugar de los hechos';
+            lblTitle.textContent = 'Título del informe';
+            lblNarrative.textContent = 'Narrativa del suceso';
+            lblList1Title.innerHTML = '<span class="section-num">4.</span> Actuaciones Realizadas';
+            lblList2Title.innerHTML = '<span class="section-num">5.</span> Pruebas o Evidencias Recogidas';
+            numObservations.textContent = '6.';
+            lblObservations.textContent = 'Observaciones';
+            numSignatures.textContent = '7.';
+            lblSignatureName.textContent = 'Nombre que firma';
+        } else if (docType === 'evaluation') {
+            lblSubtitle.textContent = 'Rango del Evaluado';
+            lblDate.textContent = 'Fecha de Evaluación';
+            lblTitle.textContent = 'Nombre del Agente Evaluado';
+            lblNarrative.textContent = 'Desempeño y observaciones generales';
+            lblList1Title.innerHTML = '<span class="section-num">4.</span> Aspectos Destacados / Puntos Fuertes';
+            lblList2Title.innerHTML = '<span class="section-num">5.</span> Aspectos a mejorar';
+            numObservations.textContent = '6.';
+            lblObservations.textContent = 'Veredicto / Decisión final';
+            numSignatures.textContent = '7.';
+            lblSignatureName.textContent = 'Nombre del Evaluador';
+        } else if (docType === 'complaint') {
+            lblSubtitle.textContent = 'Estado de la Denuncia';
+            lblDate.textContent = 'Fecha y Hora del Suceso';
+            lblLocation.textContent = 'Lugar del Suceso';
+            lblTitle.textContent = 'Nombre Completo del Denunciante';
+            lblNarrative.textContent = 'Relato de los hechos';
+            lblList1Title.innerHTML = '<span class="section-num">4.</span> Testigos o Pruebas Aportadas';
+            numObservations.textContent = '5.';
+            lblObservations.textContent = 'Medidas o Peticiones del Denunciante';
+            numSignatures.textContent = '6.';
+            lblSignatureName.textContent = 'Nombre del Agente Receptor';
+        } else if (docType === 'seizure') {
+            lblSubtitle.textContent = 'Tipo de Bienes Incautados';
+            lblDate.textContent = 'Fecha y Hora de Incautación';
+            lblLocation.textContent = 'Lugar de la Incautación';
+            lblTitle.textContent = 'Propietario / Sospechoso';
+            lblNarrative.textContent = 'Narrativa de la intervención';
+            lblList1Title.innerHTML = '<span class="section-num">3.</span> Relación de Bienes Incautados';
+            numObservations.textContent = '4.';
+            lblObservations.textContent = 'Destino Final de los Bienes';
+            numSignatures.textContent = '5.';
+            lblSignatureName.textContent = 'Nombre del Agente Registrador';
+        } else if (docType === 'warrant') {
+            lblSubtitle.textContent = 'Recompensa ($ / Oro)';
+            lblDate.textContent = 'Fecha de Emisión';
+            lblLocation.textContent = 'Último Lugar Visto';
+            lblTitle.textContent = 'Nombre del Fugitivo / Alias';
+            lblNarrative.textContent = 'Instrucciones de Captura / Observaciones';
+            numSignatures.textContent = '4.';
+            lblSignatureName.textContent = 'Sheriff / Juez Autorizador';
+        }
+
+        // Mostrar plantilla activa en la vista previa
+        document.querySelectorAll('.report-content-template').forEach(template => {
+            if (template.id === 'preview-content-' + docType) {
+                template.style.display = '';
+            } else {
+                template.style.display = 'none';
+            }
+        });
+
+        // Configurar clase en el contenedor de vista previa para estilos tipoWanted, etc.
+        if (reportPreview) {
+            reportPreview.className = 'report-paper doc-type-' + docType;
+        }
+    }
+
     // Actualiza los valores de los inputs del formulario basados en el estado
     function updateFormInputs() {
+        if (state.docType === 'none') return;
+        document.getElementById('input-doc-type').value = state.docType;
         inputRegNum.value = state.regNum;
         inputSubtitle.value = state.subtitle;
         inputDate.value = state.caseDate;
-        inputLocation.value = state.caseLocation;
+        if (inputLocation) inputLocation.value = state.caseLocation || '';
         inputTitle.value = state.caseTitle;
-        inputAgents.value = state.involvedAgents;
-        inputCriminals.value = state.involvedCriminals;
-        inputCivilians.value = state.involvedCivilians;
-        inputVictims.value = state.involvedVictims;
         inputNarrative.value = state.narrative;
-        inputObservations.value = state.observations;
+        if (inputObservations) inputObservations.value = state.observations || '';
         inputSignatureName.value = state.signatureName;
         
-        // Seleccionar método de firma correcto
+        // Inputs secundarios condicionales
+        const inputRecipientAgent = document.getElementById('input-recipient-agent');
+        if (inputRecipientAgent) inputRecipientAgent.value = state.recipientAgent || '';
+        
+        const inputAgents = document.getElementById('input-agents');
+        if (inputAgents) inputAgents.value = state.involvedAgents || '';
+        
+        const inputCriminals = document.getElementById('input-criminals');
+        if (inputCriminals) inputCriminals.value = state.involvedCriminals || '';
+        
+        const inputCivilians = document.getElementById('input-civilians');
+        if (inputCivilians) inputCivilians.value = state.involvedCivilians || '';
+        
+        const inputVictims = document.getElementById('input-victims');
+        if (inputVictims) inputVictims.value = state.involvedVictims || '';
+
+        // Evaluación
+        const inputEvaluatorName = document.getElementById('input-evaluator-name');
+        if (inputEvaluatorName) inputEvaluatorName.value = state.evaluatorName || '';
+        
+        const selectEvalConduct = document.getElementById('select-eval-conduct');
+        if (selectEvalConduct) selectEvalConduct.value = state.evalConduct || 'Bueno';
+        
+        const selectEvalCombat = document.getElementById('select-eval-combat');
+        if (selectEvalCombat) selectEvalCombat.value = state.evalCombat || 'Bueno';
+        
+        const selectEvalRiding = document.getElementById('select-eval-riding');
+        if (selectEvalRiding) selectEvalRiding.value = state.evalRiding || 'Bueno';
+        
+        const selectEvalLaws = document.getElementById('select-eval-laws');
+        if (selectEvalLaws) selectEvalLaws.value = state.evalLaws || 'Bueno';
+
+        // Denuncia
+        const inputComplainantAddress = document.getElementById('input-complainant-address');
+        if (inputComplainantAddress) inputComplainantAddress.value = state.complainantAddress || '';
+        
+        const inputAccusedName = document.getElementById('input-accused-name');
+        if (inputAccusedName) inputAccusedName.value = state.accusedName || '';
+        
+        const inputAccusedDesc = document.getElementById('input-accused-desc');
+        if (inputAccusedDesc) inputAccusedDesc.value = state.accusedDesc || '';
+        
+        const inputAccusedLocation = document.getElementById('input-accused-location');
+        if (inputAccusedLocation) inputAccusedLocation.value = state.accusedLocation || '';
+        
+        const inputSignatureName2 = document.getElementById('input-signature-name-2');
+        if (inputSignatureName2) inputSignatureName2.value = state.signatureName2 || '';
+
+        // Incautación
+        const inputSeizureOwner = document.getElementById('input-seizure-owner');
+        if (inputSeizureOwner) inputSeizureOwner.value = state.seizureOwner || '';
+        
+        const inputSeizureAgents = document.getElementById('input-seizure-agents');
+        if (inputSeizureAgents) inputSeizureAgents.value = state.seizureAgents || '';
+
+        // Búsqueda/Arresto
+        const inputWarrantDanger = document.getElementById('input-warrant-danger');
+        if (inputWarrantDanger) inputWarrantDanger.value = state.warrantDanger || 'Extremadamente Peligroso';
+        
+        const inputWarrantCrimes = document.getElementById('input-warrant-crimes');
+        if (inputWarrantCrimes) inputWarrantCrimes.value = state.warrantCrimes || '';
+        
+        const inputWarrantPhysical = document.getElementById('input-warrant-physical');
+        if (inputWarrantPhysical) inputWarrantPhysical.value = state.warrantPhysical || '';
+        
+        const inputWarrantUrl = document.getElementById('input-warrant-url');
+        if (inputWarrantUrl) inputWarrantUrl.value = state.warrantPhotoUrl || '';
+
+        // Sincronizar métodos de firma
         for (let radio of radioSigMethods) {
             if (radio.value === state.sigMethod) {
                 radio.checked = true;
@@ -207,9 +579,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Guarda el estado actual de forma segura
+    // Guarda el borrador del reporte activo
     function saveDraft() {
-        safeStorage.setItem('sheriff_report_draft', JSON.stringify(state));
+        if (!state.docType || state.docType === 'none') return;
+        safeStorage.setItem('sheriff_report_active_type', state.docType);
+        safeStorage.setItem('sheriff_report_draft_' + state.docType, JSON.stringify(state));
     }
 
     // ==========================================
@@ -217,45 +591,146 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
 
     function updatePreview() {
-        prevRegNum.textContent = state.regNum;
-        prevSubtitle.textContent = state.subtitle;
-        prevDate.textContent = state.caseDate || '—';
-        prevLocation.textContent = state.caseLocation || '—';
-        prevTitle.textContent = state.caseTitle || '—';
-        prevAgents.textContent = state.involvedAgents || '—';
-        prevCriminals.textContent = state.involvedCriminals || '—';
-        prevCivilians.textContent = state.involvedCivilians || '—';
-        prevVictims.textContent = state.involvedVictims || '—';
+        const type = state.docType;
+        if (type === 'none') return;
         
-        // Narrativa
-        prevNarrative.textContent = state.narrative || 'Escriba la narrativa de los hechos...';
-        
-        // Observaciones
-        prevObservations.textContent = state.observations || 'Sin observaciones adicionales.';
-        
-        // Listas
-        renderPreviewList(prevActions, state.actions, 'No se registraron actuaciones.');
-        renderPreviewList(prevEvidences, state.evidences, 'No se recogieron pruebas.');
+        // 1. Sincronizar firmas del sheriff en todas las plantillas
+        const previewSigFonts = document.querySelectorAll('.preview-sig-font');
+        previewSigFonts.forEach(el => {
+            el.textContent = state.signatureName || 'Wesley Grant';
+        });
 
-        // Firma
-        prevSigFont.textContent = state.signatureName || 'Wesley Grant';
-        
-        if (state.sigMethod === 'font') {
-            prevSigFont.style.display = 'block';
-            prevSigImg.style.display = 'none';
-        } else {
-            prevSigFont.style.display = 'none';
-            prevSigImg.style.display = 'block';
-            if (state.sigDrawing) {
-                prevSigImg.src = state.sigDrawing;
+        const previewSigImgs = document.querySelectorAll('.preview-sig-img');
+        previewSigImgs.forEach(el => {
+            if (state.sigMethod === 'font') {
+                el.style.display = 'none';
             } else {
-                prevSigImg.src = '';
-                prevSigImg.style.display = 'none';
+                if (state.sigDrawing) {
+                    el.src = state.sigDrawing;
+                    el.style.display = 'block';
+                } else {
+                    el.src = '';
+                    el.style.display = 'none';
+                }
+            }
+        });
+
+        const previewSigFontContainers = document.querySelectorAll('.preview-sig-font');
+        previewSigFontContainers.forEach(el => {
+            if (state.sigMethod === 'font') {
+                el.style.display = 'block';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+
+        // Sincronizar cabeceras no-Warrant
+        if (type !== 'warrant') {
+            prevRegNum.textContent = state.regNum;
+            prevSubtitle.textContent = state.subtitle;
+            
+            const headerReportTitle = document.getElementById('preview-header-report-title');
+            if (type === 'police_report') {
+                headerReportTitle.textContent = 'INFORME - OFICINA DEL SHERIFF 1885';
+            } else if (type === 'evaluation') {
+                headerReportTitle.textContent = 'EVALUACIÓN DE PERSONAL';
+            } else if (type === 'complaint') {
+                headerReportTitle.textContent = 'ACTA DE DENUNCIA CIUDADANA';
+            } else if (type === 'seizure') {
+                headerReportTitle.textContent = 'ACTA DE INCAUTACIÓN Y DECOMISO';
+            }
+        }
+
+        // 2. Rellenar plantillas específicas
+        if (type === 'police_report') {
+            document.getElementById('preview-date-police_report').textContent = state.caseDate || '—';
+            document.getElementById('preview-location-police_report').textContent = state.caseLocation || '—';
+            document.getElementById('preview-title-police_report').textContent = state.caseTitle || '—';
+            document.getElementById('preview-agents-police_report').textContent = state.involvedAgents || '—';
+            document.getElementById('preview-criminals-police_report').textContent = state.involvedCriminals || '—';
+            document.getElementById('preview-civilians-police_report').textContent = state.involvedCivilians || '—';
+            document.getElementById('preview-victims-police_report').textContent = state.involvedVictims || '—';
+            document.getElementById('preview-narrative-police_report').textContent = state.narrative || 'Escriba la narrativa de los hechos...';
+            document.getElementById('preview-observations-police_report').textContent = state.observations || 'Sin observaciones adicionales.';
+            
+            renderPreviewList(document.getElementById('preview-actions-police_report'), state.actions, 'No se registraron actuaciones.');
+            renderPreviewList(document.getElementById('preview-evidences-police_report'), state.evidences, 'No se recogieron pruebas.');
+        } 
+        else if (type === 'evaluation') {
+            document.getElementById('preview-date-evaluation').textContent = state.caseDate || '—';
+            document.getElementById('preview-title-evaluation').textContent = state.caseTitle || '—';
+            document.getElementById('preview-subtitle-evaluation').textContent = state.subtitle || '—';
+            document.getElementById('preview-agents-evaluation').textContent = state.evaluatorName || '—';
+            
+            document.getElementById('preview-eval-conduct').textContent = state.evalConduct || '—';
+            document.getElementById('preview-eval-combat').textContent = state.evalCombat || '—';
+            document.getElementById('preview-eval-riding').textContent = state.evalRiding || '—';
+            document.getElementById('preview-eval-laws').textContent = state.evalLaws || '—';
+            
+            document.getElementById('preview-narrative-evaluation').textContent = state.narrative || 'Sin detalles de desempeño...';
+            document.getElementById('preview-observations-evaluation').textContent = state.observations || 'APROBADO';
+            
+            renderPreviewList(document.getElementById('preview-actions-evaluation'), state.actions, 'Sin aspectos destacados.');
+            renderPreviewList(document.getElementById('preview-evidences-evaluation'), state.evidences, 'Sin aspectos a mejorar.');
+        }
+        else if (type === 'complaint') {
+            document.getElementById('preview-complainant-name').textContent = state.caseTitle || '—';
+            document.getElementById('preview-civilians-complaint').textContent = state.complainantAddress || '—';
+            document.getElementById('preview-date-complaint').textContent = state.caseDate || '—';
+            document.getElementById('preview-location-complaint').textContent = state.caseLocation || '—';
+            
+            document.getElementById('preview-accused-name').textContent = state.accusedName || '—';
+            document.getElementById('preview-accused-desc').textContent = state.accusedDesc || '—';
+            document.getElementById('preview-accused-location').textContent = state.accusedLocation || '—';
+            
+            document.getElementById('preview-narrative-complaint').textContent = state.narrative || 'Escriba el relato de los hechos...';
+            document.getElementById('preview-observations-complaint').textContent = state.observations || 'Ninguna especificada.';
+            
+            // Firma secundaria denunciante caligráfica
+            document.getElementById('preview-sig-font-denunciante').textContent = state.signatureName2 || '—';
+            
+            renderPreviewList(document.getElementById('preview-actions-complaint'), state.actions, 'Ninguna prueba aportada.');
+        }
+        else if (type === 'seizure') {
+            document.getElementById('preview-date-seizure').textContent = state.caseDate || '—';
+            document.getElementById('preview-location-seizure').textContent = state.caseLocation || '—';
+            document.getElementById('preview-criminals-seizure').textContent = state.seizureOwner || '—';
+            document.getElementById('preview-agents-seizure').textContent = state.seizureAgents || '—';
+            
+            document.getElementById('preview-narrative-seizure').textContent = state.narrative || 'Detalles del procedimiento de incautación...';
+            document.getElementById('preview-observations-seizure').textContent = state.observations || 'Bienes custodiados en el depósito.';
+            
+            renderPreviewList(document.getElementById('preview-actions-seizure'), state.actions, 'No se registraron bienes.');
+        }
+        else if (type === 'warrant') {
+            document.getElementById('preview-warrant-name').textContent = state.caseTitle || '—';
+            document.getElementById('preview-warrant-crimes').textContent = state.warrantCrimes || '—';
+            document.getElementById('preview-warrant-danger').textContent = state.warrantDanger || '—';
+            document.getElementById('preview-warrant-location').textContent = state.caseLocation || '—';
+            document.getElementById('preview-warrant-physical').textContent = state.warrantPhysical || '—';
+            document.getElementById('preview-narrative-warrant').textContent = state.narrative || '—';
+            document.getElementById('preview-warrant-reward').textContent = state.subtitle || '$0.00 ORO';
+            document.getElementById('preview-date-warrant').textContent = state.caseDate || '—';
+            document.getElementById('preview-reg-num-warrant').textContent = state.regNum || '—';
+            
+            // Retrato del wanted
+            const imgEl = document.getElementById('preview-warrant-img');
+            const placeholderEl = document.getElementById('preview-warrant-photo-placeholder');
+            const photoSrc = state.warrantPhotoData || state.warrantPhotoUrl;
+            
+            if (photoSrc) {
+                imgEl.src = photoSrc;
+                imgEl.style.display = 'block';
+                placeholderEl.style.display = 'none';
+            } else {
+                imgEl.style.display = 'none';
+                placeholderEl.style.display = 'flex';
             }
         }
     }
 
     function renderPreviewList(element, itemsArray, emptyMessage) {
+        if (!element) return;
         element.innerHTML = '';
         const activeItems = itemsArray.filter(item => item.trim() !== '');
         
@@ -283,6 +758,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = type === 'actions' ? actionsContainer : evidencesContainer;
         const items = type === 'actions' ? state.actions : state.evidences;
         
+        if (!container || !items) return;
+        
         container.innerHTML = '';
         
         items.forEach((item, index) => {
@@ -292,7 +769,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const input = document.createElement('input');
             input.type = 'text';
             input.value = item;
-            input.placeholder = type === 'actions' ? `Actuación ${index + 1}` : `Prueba ${index + 1}`;
+            
+            // Cambiar marcador de posición según el tipo de informe
+            let itemPlaceholder = '';
+            if (type === 'actions') {
+                if (state.docType === 'police_report') itemPlaceholder = `Actuación ${index + 1}`;
+                else if (state.docType === 'evaluation') itemPlaceholder = `Punto Fuerte ${index + 1}`;
+                else if (state.docType === 'seizure') itemPlaceholder = `Objeto Confiscado ${index + 1}`;
+                else if (state.docType === 'complaint') itemPlaceholder = `Prueba/Testigo ${index + 1}`;
+            } else {
+                if (state.docType === 'police_report') itemPlaceholder = `Prueba ${index + 1}`;
+                else if (state.docType === 'evaluation') itemPlaceholder = `Aspecto a Mejorar ${index + 1}`;
+            }
+            input.placeholder = itemPlaceholder;
             
             input.addEventListener('input', (e) => {
                 items[index] = e.target.value;
@@ -320,19 +809,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Añadir nuevo ítem a las listas
-    btnAddAction.addEventListener('click', () => {
-        state.actions.push('');
-        renderDynamicInputs('actions');
-        saveDraft();
-        updatePreview();
-    });
+    if (btnAddAction) {
+        btnAddAction.addEventListener('click', () => {
+            state.actions.push('');
+            renderDynamicInputs('actions');
+            saveDraft();
+            updatePreview();
+        });
+    }
 
-    btnAddEvidence.addEventListener('click', () => {
-        state.evidences.push('');
-        renderDynamicInputs('evidences');
-        saveDraft();
-        updatePreview();
-    });
+    if (btnAddEvidence) {
+        btnAddEvidence.addEventListener('click', () => {
+            state.evidences.push('');
+            renderDynamicInputs('evidences');
+            saveDraft();
+            updatePreview();
+        });
+    }
 
     // ==========================================
     // 4. FORMULARIO EVENT LISTENERS
@@ -340,22 +833,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('input', (e) => {
         const target = e.target;
-        
-        if (target.name === 'regNum') state.regNum = target.value;
-        if (target.name === 'subtitle') state.subtitle = target.value;
-        if (target.name === 'caseDate') state.caseDate = target.value;
-        if (target.name === 'caseLocation') state.caseLocation = target.value;
-        if (target.name === 'caseTitle') state.caseTitle = target.value;
-        if (target.name === 'involvedAgents') state.involvedAgents = target.value;
-        if (target.name === 'involvedCriminals') state.involvedCriminals = target.value;
-        if (target.name === 'involvedCivilians') state.involvedCivilians = target.value;
-        if (target.name === 'involvedVictims') state.involvedVictims = target.value;
-        if (target.name === 'narrative') state.narrative = target.value;
-        if (target.name === 'observations') state.observations = target.value;
-        if (target.name === 'signatureName') state.signatureName = target.value;
-        
-        saveDraft();
-        updatePreview();
+        if (target.name && target.name !== 'docType') {
+            state[target.name] = target.value;
+            saveDraft();
+            updatePreview();
+        }
+    });
+
+    form.addEventListener('change', (e) => {
+        const target = e.target;
+        if (target.name && target.name !== 'docType') {
+            state[target.name] = target.value;
+            saveDraft();
+            updatePreview();
+        }
     });
 
     // Configuración Discord Webhook Event Listeners
@@ -443,10 +934,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function incrementRegistryNumber() {
-        let count = parseInt(safeStorage.getItem('sheriff_report_counter') || '0', 10);
+        const type = state.docType;
+        let count = parseInt(safeStorage.getItem('sheriff_report_counter_' + type) || '0', 10);
         count += 1;
-        safeStorage.setItem('sheriff_report_counter', count.toString());
-        state.regNum = `INF-POL-${count}`;
+        safeStorage.setItem('sheriff_report_counter_' + type, count.toString());
+        state.regNum = `${DOC_PREFIXES[type]}${count}`;
         inputRegNum.value = state.regNum;
         saveDraft();
         updatePreview();
@@ -555,10 +1047,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
 
     function generatePlaintextReport() {
+        const type = state.docType;
         const actionsList = state.actions.filter(x => x.trim()).map(x => `• ${x}`).join('\n');
         const evidencesList = state.evidences.filter(x => x.trim()).map(x => `• ${x}`).join('\n');
 
-        return `**🤠 INFORME - OFICINA DEL SHERIFF 🤠**
+        if (type === 'police_report') {
+            return `**🤠 INFORME - OFICINA DEL SHERIFF 🤠**
 *1885*
 ***
 **N.º DE REGISTRO:** \`${state.regNum}\`
@@ -592,6 +1086,128 @@ ${state.observations || 'Ninguna observación adicional.'}
 **7. FIRMA**
 • **Firma del sheriff responsable:** *${state.signatureName || '—'}*
 ***`;
+        } 
+        else if (type === 'evaluation') {
+            return `**🤠 EVALUACIÓN DE AGENTE - OFICINA DEL SHERIFF 🤠**
+*1885*
+***
+**N.º DE EXPEDIENTE:** \`${state.regNum}\`
+**RANGO / CARGO:** \`${state.subtitle}\`
+***
+**1. DATOS DE LA EVALUACIÓN**
+• **Fecha:** ${state.caseDate || '—'}
+• **Agente Evaluado:** ${state.caseTitle || '—'}
+• **Agente Evaluador:** ${state.evaluatorName || '—'}
+
+**2. CALIFICACIÓN DE APTITUDES**
+• **Conducta y Disciplina:** ${state.evalConduct || '—'}
+• **Habilidad de Combate y Tiro:** ${state.evalCombat || '—'}
+• **Equitación y Patrullaje:** ${state.evalRiding || '—'}
+• **Conocimiento de las Leyes:** ${state.evalLaws || '—'}
+
+**3. EVALUACIÓN DEL DESEMPEÑO**
+\`\`\`
+${state.narrative || '—'}
+\`\`\`
+
+**4. ASPECTOS DESTACADOS (PUNTOS FUERTES)**
+${actionsList || 'Sin aspectos destacados.'}
+
+**5. ASPECTOS A MEJORAR**
+${evidencesList || 'Sin aspectos a mejorar.'}
+
+**6. VEREDICTO / RESOLUCIÓN**
+${state.observations || '—'}
+
+**7. FIRMA**
+• **Firma del evaluador responsable:** *${state.signatureName || '—'}*
+***`;
+        }
+        else if (type === 'complaint') {
+            return `**🤠 ACTA DE DENUNCIA CIUDADANA - OFICINA DEL SHERIFF 🤠**
+*1885*
+***
+**N.º DE DENUNCIA:** \`${state.regNum}\`
+**ESTADO:** \`${state.subtitle}\`
+***
+**1. INFORMACIÓN DEL DENUNCIANTE**
+• **Nombre del Denunciante:** ${state.caseTitle || '—'}
+• **Procedencia / Domicilio:** ${state.complainantAddress || '—'}
+• **Fecha del Suceso:** ${state.caseDate || '—'}
+• **Lugar del Suceso:** ${state.caseLocation || '—'}
+
+**2. IDENTIFICACIÓN DEL ACUSADO / SOSPECHOSO**
+• **Nombre / Alias:** ${state.accusedName || '—'}
+• **Descripción Física:** ${state.accusedDesc || '—'}
+• **Paradero habitual:** ${state.accusedLocation || '—'}
+
+**3. RELATO Y NARRATIVA DEL DENUNCIANTE**
+\`\`\`
+${state.narrative || '—'}
+\`\`\`
+
+**4. PRUEBAS O TESTIGOS APORTADOS**
+${actionsList || 'Ninguna prueba o testigo aportado.'}
+
+**5. MEDIDAS O PETICIONES SOLICITADAS**
+${state.observations || 'Ninguna especificada.'}
+
+**6. DOBLE FIRMA DE CONFORMIDAD**
+• **Firma del Denunciante:** *${state.signatureName2 || '—'}*
+• **Agente Receptor (Of. Sheriff):** *${state.signatureName || '—'}*
+***`;
+        }
+        else if (type === 'seizure') {
+            return `**🤠 ACTA DE INCAUTACIÓN Y DECOMISO - OFICINA DEL SHERIFF 🤠**
+*1885*
+***
+**N.º DE ACTA:** \`${state.regNum}\`
+**BIENES:** \`${state.subtitle}\`
+***
+**1. DATOS DE LA ACTUACIÓN**
+• **Fecha y Hora:** ${state.caseDate || '—'}
+• **Lugar:** ${state.caseLocation || '—'}
+• **Propietario / Sospechoso:** ${state.seizureOwner || '—'}
+• **Agentes intervinientes:** ${state.seizureAgents || '—'}
+
+**2. RELACIÓN DE BIENES INCAUTADOS**
+${actionsList || 'No se registraron bienes.'}
+
+**3. NARRATIVA DEL DECOMISO**
+\`\`\`
+${state.narrative || '—'}
+\`\`\`
+
+**4. DESTINO FINAL DE LO CONFISCADO**
+${state.observations || '—'}
+
+**5. FIRMA**
+• **Firma del agente registrador:** *${state.signatureName || '—'}*
+***`;
+        }
+        else if (type === 'warrant') {
+            return `**🚨 ORDEN DE ARRESTO / WANTED (SE BUSCA) 🚨**
+*OFICINA DEL SHERIFF 1885*
+***
+**REGISTRO N.º:** \`${state.regNum}\`
+**RECOMPENSA:** **\`${state.subtitle}\`**
+***
+**SE BUSCA A:** **${state.caseTitle || '—'}**
+• **Delitos Acusados:** ${state.warrantCrimes || '—'}
+• **Peligrosidad:** ${state.warrantDanger || '—'}
+• **Último Lugar Visto:** ${state.caseLocation || '—'}
+• **Descripción Física:** ${state.warrantPhysical || '—'}
+
+**INSTRUCCIONES DE CAPTURA:**
+\`\`\`
+${state.narrative || '—'}
+\`\`\`
+
+**EMITIDO EL:** ${state.caseDate || '—'}
+**BAJO AUTORIZACIÓN DE:** *${state.signatureName || '—'}*
+***`;
+        }
+        return '';
     }
 
     // Botón Copiar Texto
@@ -632,41 +1248,85 @@ ${state.observations || 'Ninguna observación adicional.'}
         if (actionType === 'pdf') actionLabel = 'Descarga de Documento (PDF)';
         if (actionType === 'copy') actionLabel = 'Copiado de texto (Markdown)';
 
-        const actionsList = state.actions.filter(x => x.trim()).map(x => `• ${x}`).join('\n') || 'Ninguna registrada.';
-        const evidencesList = state.evidences.filter(x => x.trim()).map(x => `• ${x}`).join('\n') || 'Ninguna recogida.';
+        const type = state.docType;
+        const actionsList = state.actions.filter(x => x.trim()).map(x => `• ${x}`).join('\n') || 'Ninguno registrado.';
+        const evidencesList = state.evidences.filter(x => x.trim()).map(x => `• ${x}`).join('\n') || 'Ninguno recogido.';
 
-        // Construir embed del informe
+        // Valores por defecto del payload
+        let title = `🤠 INFORME DE SHERIFF: ${state.regNum}`;
+        let description = `**${state.subtitle}**\n\n_${state.caseTitle || 'Sin título de informe.'}_`;
+        let color = 10365474; // Rojo RDR
+        let fields = [];
+        let imageObj = null;
+
+        if (type === 'police_report') {
+            title = `🤠 INFORME DE SHERIFF: ${state.regNum}`;
+            color = 10365474; // Rojo RDR
+            fields = [
+                { name: '📅 Detalles del Suceso', value: `**Fecha:** ${state.caseDate || '—'}\n**Lugar:** ${state.caseLocation || '—'}` },
+                { name: '👥 Involucrados', value: `**Agentes:** ${state.involvedAgents || '—'}\n**Sospechosos:** ${state.involvedCriminals || '—'}\n**Civiles:** ${state.involvedCivilians || '—'}\n**Víctimas:** ${state.involvedVictims || '—'}` },
+                { name: '📝 Narrativa de los Hechos', value: state.narrative ? state.narrative.substring(0, 1000) : '—' },
+                { name: '🔧 Actuaciones Realizadas', value: actionsList.substring(0, 1024) },
+                { name: '🔎 Pruebas Recogidas', value: evidencesList.substring(0, 1024) },
+                { name: '✏️ Observaciones', value: state.observations ? state.observations.substring(0, 1024) : 'Ninguna' }
+            ];
+        } 
+        else if (type === 'evaluation') {
+            title = `📋 EVALUACIÓN DE PERSONAL: ${state.regNum}`;
+            color = 42865; // Azul Sheriff
+            fields = [
+                { name: '📅 Datos Generales', value: `**Fecha:** ${state.caseDate || '—'}\n**Agente Evaluado:** ${state.caseTitle || '—'}\n**Evaluador:** ${state.evaluatorName || '—'}\n**Cargo / Rango:** ${state.subtitle || '—'}` },
+                { name: '⭐ Calificaciones', value: `**Conducta:** ${state.evalConduct}\n**Combate:** ${state.evalCombat}\n**Equitación:** ${state.evalRiding}\n**Conocimiento Leyes:** ${state.evalLaws}` },
+                { name: '📝 Evaluación del Desempeño', value: state.narrative ? state.narrative.substring(0, 1000) : '—' },
+                { name: '📈 Aspectos Destacados', value: actionsList.substring(0, 1024) },
+                { name: '📉 Aspectos a Mejorar', value: evidencesList.substring(0, 1024) },
+                { name: '⚖️ Veredicto Final', value: `**${state.observations}**` }
+            ];
+        }
+        else if (type === 'complaint') {
+            title = `📝 DENUNCIA CIUDADANA: ${state.regNum}`;
+            color = 15112215; // Naranja/Bronce
+            fields = [
+                { name: '👤 Datos del Denunciante', value: `**Nombre:** ${state.caseTitle || '—'}\n**Procedencia:** ${state.complainantAddress || '—'}\n**Fecha Suceso:** ${state.caseDate || '—'}\n**Lugar:** ${state.caseLocation || '—'}` },
+                { name: '🕵️ Sospechoso / Acusado', value: `**Nombre/Alias:** ${state.accusedName || '—'}\n**Rasgos:** ${state.accusedDesc || '—'}\n**Paradero:** ${state.accusedLocation || '—'}` },
+                { name: '📝 Relato de los Hechos', value: state.narrative ? state.narrative.substring(0, 1000) : '—' },
+                { name: '🔎 Pruebas / Testigos', value: actionsList.substring(0, 1024) },
+                { name: '⚖️ Peticiones del Denunciante', value: state.observations ? state.observations.substring(0, 1024) : 'Ninguna' }
+            ];
+        }
+        else if (type === 'seizure') {
+            title = `⚖️ ACTA DE INCAUTACIÓN Y DECOMISO: ${state.regNum}`;
+            color = 7552554; // Verde
+            fields = [
+                { name: '📅 Datos del Operativo', value: `**Fecha:** ${state.caseDate || '—'}\n**Lugar:** ${state.caseLocation || '—'}\n**Propietario/Sospechoso:** ${state.seizureOwner || '—'}\n**Agentes intervinientes:** ${state.seizureAgents || '—'}` },
+                { name: '📦 Bienes Confiscados', value: actionsList.substring(0, 1024) },
+                { name: '📝 Relato del Procedimiento', value: state.narrative ? state.narrative.substring(0, 1000) : '—' },
+                { name: '🔒 Destino Final de los Bienes', value: state.observations ? state.observations.substring(0, 1024) : '—' }
+            ];
+        }
+        else if (type === 'warrant') {
+            title = `🚨 ORDEN DE ARRESTO - WANTED: ${state.regNum}`;
+            color = 16711680; // Rojo Alerta
+            description = `**SE BUSCA A: ${state.caseTitle}**\n**RECOMPENSA: ${state.subtitle}**`;
+            fields = [
+                { name: '🕵️ Datos del Fugitivo', value: `**Delitos:** ${state.warrantCrimes || '—'}\n**Peligrosidad:** ${state.warrantDanger || '—'}\n**Última vez visto:** ${state.caseLocation || '—'}` },
+                { name: '🗣️ Descripción Física', value: state.warrantPhysical || '—' },
+                { name: '📝 Instrucciones de Captura', value: state.narrative ? state.narrative.substring(0, 1000) : '—' }
+            ];
+            
+            // Si hay una URL externa del fugitivo, incluirla en la previsualización del embed
+            if (state.warrantPhotoUrl && state.warrantPhotoUrl.startsWith('http')) {
+                imageObj = { url: state.warrantPhotoUrl };
+            }
+        }
+
         const payload = {
             embeds: [{
-                title: `🤠 INFORME DE SHERIFF: ${state.regNum}`,
-                description: `**${state.subtitle}**\n\n_${state.caseTitle || 'Sin título de informe.'}_`,
-                color: 10365474, // Rojo RDR
-                fields: [
-                    {
-                        name: '📅 Detalles del Suceso',
-                        value: `**Fecha:** ${state.caseDate || '—'}\n**Lugar:** ${state.caseLocation || '—'}`
-                    },
-                    {
-                        name: '👥 Personas Involucradas',
-                        value: `**Agentes:** ${state.involvedAgents || '—'}\n**Delincuentes:** ${state.involvedCriminals || '—'}\n**Civiles:** ${state.involvedCivilians || '—'}\n**Víctimas:** ${state.involvedVictims || '—'}`
-                    },
-                    {
-                        name: '📝 Narrativa de los Hechos',
-                        value: state.narrative ? (state.narrative.substring(0, 1000) + (state.narrative.length > 1000 ? '...' : '')) : '—'
-                    },
-                    {
-                        name: '🔧 Actuaciones Realizadas',
-                        value: actionsList.substring(0, 1024)
-                    },
-                    {
-                        name: '🔎 Pruebas o Evidencias Recogidas',
-                        value: evidencesList.substring(0, 1024)
-                    },
-                    {
-                        name: '✏️ Observaciones Adicionales',
-                        value: state.observations ? state.observations.substring(0, 1024) : 'Ninguna'
-                    }
-                ],
+                title: title,
+                description: description,
+                color: color,
+                fields: fields,
+                image: imageObj,
                 footer: {
                     text: `Firmado por: ${state.signatureName} | Acción: ${actionLabel}`
                 },
@@ -741,32 +1401,12 @@ ${state.observations || 'Ninguna observación adicional.'}
     });
 
     btnReset.addEventListener('click', () => {
-        if (confirm('¿Estás seguro de que quieres limpiar todo el informe? Se borrarán los textos actuales.')) {
-            safeStorage.removeItem('sheriff_report_draft');
-            const currentCounter = safeStorage.getItem('sheriff_report_counter') || '0';
-            state = {
-                regNum: `INF-POL-${currentCounter}`,
-                subtitle: 'Posible Contratación de Pistoleros',
-                caseDate: '',
-                caseLocation: '',
-                caseTitle: '',
-                involvedAgents: '',
-                involvedCriminals: 'N/A',
-                involvedCivilians: 'N/A',
-                involvedVictims: 'N/A',
-                narrative: '',
-                actions: [''],
-                evidences: [''],
-                observations: '',
-                signatureName: '',
-                sigMethod: 'font',
-                sigDrawing: null
-            };
+        if (confirm('¿Estás seguro de que quieres limpiar todo el informe actual? Se borrarán los textos actuales.')) {
+            const type = state.docType;
+            safeStorage.removeItem('sheriff_report_draft_' + type);
             
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            state.caseDate = `${dd}/${mm}/1885`;
+            const currentCounter = safeStorage.getItem('sheriff_report_counter_' + type) || '0';
+            state = defaultState(type, currentCounter);
             
             updateFormInputs();
             renderDynamicInputs('actions');
