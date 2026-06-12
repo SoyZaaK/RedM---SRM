@@ -435,14 +435,36 @@ button {
     overflow: auto;
     padding: 40px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
     gap: 40px;
 }
 
+.report-wrapper::before,
+.report-wrapper::after {
+    content: '';
+    margin: auto;
+}
+
 /* ==========================================
-   EL PAPEL DEL INFORME (ESTÉTICA 1880)
+   CONTENEDOR DE ESCALADO (ZOOM DE PREPARACIÓN)
    ========================================== */
+.paper-scale-wrapper {
+    width: calc(var(--paper-width) * var(--preview-scale, 1));
+    height: calc(var(--paper-height) * var(--preview-scale, 1));
+    position: relative;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-shrink: 0;
+    transition: width 0.15s ease-out, height 0.15s ease-out;
+}
+
+.paper-scale-wrapper .report-paper {
+    transform: scale(var(--preview-scale, 1));
+    transform-origin: top left;
+    margin: 0 !important;
+}
 .report-paper {
     width: var(--paper-width);
     min-width: var(--paper-width);
@@ -979,14 +1001,22 @@ input[type="file"]::-webkit-file-upload-button:hover {
         height: 100%;
     }
     
+    .paper-scale-wrapper {
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        display: block !important;
+    }
+    
     .report-paper {
         box-shadow: none !important;
         border: none !important;
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 100% !important;
+        height: 100% !important;
+        transform: none !important;
         padding: 50px;
         box-sizing: border-box;
         -webkit-print-color-adjust: exact;

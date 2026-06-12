@@ -125,6 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Estado activo
     let state = {};
+    let showManual = false;
+    let zoomMode = 'auto';
+    let zoomScale = 1;
 
     // Elementos del DOM - Formulario
     const form = document.getElementById('report-form');
@@ -238,8 +241,91 @@ document.addEventListener('DOMContentLoaded', () => {
             img.src = state.sigDrawing;
         }
 
+        // Configurar botones de zoom
+        const btnZoomIn = document.getElementById('btn-zoom-in');
+        const btnZoomOut = document.getElementById('btn-zoom-out');
+        const btnZoomAuto = document.getElementById('btn-zoom-auto');
+        
+        if (btnZoomIn) {
+            btnZoomIn.addEventListener('click', () => {
+                zoomMode = 'manual';
+                zoomScale = Math.min(1.5, Math.round((zoomScale + 0.1) * 10) / 10);
+                updatePreviewScale();
+            });
+        }
+        
+        if (btnZoomOut) {
+            btnZoomOut.addEventListener('click', () => {
+                zoomMode = 'manual';
+                zoomScale = Math.max(0.35, Math.round((zoomScale - 0.1) * 10) / 10);
+                updatePreviewScale();
+            });
+        }
+        
+        if (btnZoomAuto) {
+            btnZoomAuto.addEventListener('click', () => {
+                zoomMode = 'auto';
+                updatePreviewScale();
+            });
+        }
+
+        // Configurar botón para alternar manual de uso
+        const btnToggleManual = document.getElementById('btn-toggle-manual');
+        if (btnToggleManual) {
+            btnToggleManual.addEventListener('click', () => {
+                showManual = !showManual;
+                if (showManual) {
+                    btnToggleManual.classList.add('active');
+                    btnToggleManual.style.backgroundColor = 'var(--primary)';
+                    btnToggleManual.style.color = '#fff';
+                } else {
+                    btnToggleManual.classList.remove('active');
+                    btnToggleManual.style.backgroundColor = 'var(--accent)';
+                    btnToggleManual.style.color = '#000';
+                }
+                updateFormVisibility();
+                updatePreviewScale();
+            });
+        }
+
+        // Evento de redimensión para auto-zoom
+        window.addEventListener('resize', () => {
+            if (zoomMode === 'auto') {
+                updatePreviewScale();
+            }
+        });
+
         // Actualizar vista previa
         updatePreview();
+        updatePreviewScale();
+    }
+
+    function updatePreviewScale() {
+        const wrapper = document.querySelector('.report-wrapper');
+        if (!wrapper) return;
+        
+        if (zoomMode === 'auto') {
+            const padding = 40;
+            const availableWidth = wrapper.clientWidth - (padding * 2);
+            const targetWidth = 800; // Ancho natural del papel A4
+            
+            let scale = availableWidth / targetWidth;
+            if (scale > 1) scale = 1;
+            if (scale < 0.35) scale = 0.35;
+            zoomScale = scale;
+            
+            const zoomLevelText = document.getElementById('zoom-level');
+            if (zoomLevelText) {
+                zoomLevelText.textContent = `Auto (${Math.round(scale * 100)}%)`;
+            }
+        } else {
+            const zoomLevelText = document.getElementById('zoom-level');
+            if (zoomLevelText) {
+                zoomLevelText.textContent = `${Math.round(zoomScale * 100)}%`;
+            }
+        }
+        
+        document.documentElement.style.setProperty('--preview-scale', zoomScale);
     }
 
     function initializeDefaultStateForType(type) {
@@ -349,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updatePreview();
+        updatePreviewScale();
     }
 
     // Actualiza visibilidad de inputs en el panel izquierdo según el tipo de reporte
@@ -362,22 +449,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const reportPreview = document.getElementById('report-preview');
         const infoPaper = document.querySelector('.info-paper');
 
+        const welcomeBinderWrapper = document.getElementById('welcome-binder-wrapper');
+        const reportPreviewWrapper = document.getElementById('report-preview-wrapper');
+        const infoPaperWrapper = document.getElementById('info-paper-wrapper');
+        const previewHeaderControls = document.getElementById('preview-header-controls');
+
         if (docType === 'none') {
             if (selectorScreen) selectorScreen.style.display = 'flex';
             if (reportForm) reportForm.style.display = 'none';
             if (panelActions) panelActions.style.display = 'none';
-            if (welcomeBinder) welcomeBinder.style.display = 'flex';
-            if (reportPreview) reportPreview.style.display = 'none';
-            if (infoPaper) infoPaper.style.display = 'none';
+            if (welcomeBinderWrapper) welcomeBinderWrapper.style.display = 'flex';
+            if (reportPreviewWrapper) reportPreviewWrapper.style.display = 'none';
+            if (infoPaperWrapper) infoPaperWrapper.style.display = 'none';
+            if (previewHeaderControls) previewHeaderControls.style.display = 'none';
             return;
         }
 
         if (selectorScreen) selectorScreen.style.display = 'none';
         if (reportForm) reportForm.style.display = 'flex';
         if (panelActions) panelActions.style.display = 'flex';
-        if (welcomeBinder) welcomeBinder.style.display = 'none';
-        if (reportPreview) reportPreview.style.display = 'flex';
-        if (infoPaper) infoPaper.style.display = 'flex';
+        if (welcomeBinderWrapper) welcomeBinderWrapper.style.display = 'none';
+        if (reportPreviewWrapper) reportPreviewWrapper.style.display = 'flex';
+        if (infoPaperWrapper) infoPaperWrapper.style.display = showManual ? 'flex' : 'none';
+        if (previewHeaderControls) previewHeaderControls.style.display = 'flex';
 
         // Actualizar etiqueta del badge de tipo activo
         const badge = document.getElementById('active-document-badge');
@@ -1359,6 +1453,10 @@ ${state.narrative || '—'}
 
         const report = document.getElementById('report-preview');
 
+        // Guardar la escala actual y restablecer a 1 para capturar sin distorsión
+        const prevScale = document.documentElement.style.getPropertyValue('--preview-scale');
+        document.documentElement.style.setProperty('--preview-scale', '1');
+
         setTimeout(() => {
             html2canvas(report, {
                 scale: 2, 
@@ -1367,6 +1465,9 @@ ${state.narrative || '—'}
                 backgroundColor: null,
                 logging: false
             }).then(canvas => {
+                // Restaurar la escala original
+                document.documentElement.style.setProperty('--preview-scale', prevScale);
+
                 const link = document.createElement('a');
                 link.download = `informe-sheriff-${state.regNum.toLowerCase()}.png`;
                 link.href = canvas.toDataURL('image/png');
@@ -1381,6 +1482,9 @@ ${state.narrative || '—'}
                 btnDownloadPng.disabled = false;
                 btnDownloadPng.textContent = 'Descargar PNG';
             }).catch(err => {
+                // Restaurar la escala original en caso de error
+                document.documentElement.style.setProperty('--preview-scale', prevScale);
+
                 console.error("Error al generar la imagen", err);
                 alert("Hubo un error al generar la imagen.");
                 btnDownloadPng.disabled = false;

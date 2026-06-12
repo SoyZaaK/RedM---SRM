@@ -368,28 +368,44 @@
         <main class="preview-area">
             <div class="preview-header-sticky">
                 <h3>Vista Previa del Informe</h3>
+                <div class="preview-header-controls" id="preview-header-controls" style="display: none; align-items: center; gap: 16px;">
+                    <!-- Controles de Zoom -->
+                    <div class="zoom-controls" style="display: flex; align-items: center; gap: 8px;">
+                        <button type="button" id="btn-zoom-out" class="btn-xs" title="Reducir Zoom" style="width: 28px; height: 28px; font-size: 14px; display: flex; align-items: center; justify-content: center; background-color: var(--border-color); color: var(--text-light);">－</button>
+                        <span id="zoom-level" style="font-size: 12px; font-weight: bold; min-width: 80px; text-align: center; color: var(--accent);">Auto</span>
+                        <button type="button" id="btn-zoom-in" class="btn-xs" title="Aumentar Zoom" style="width: 28px; height: 28px; font-size: 14px; display: flex; align-items: center; justify-content: center; background-color: var(--border-color); color: var(--text-light);">＋</button>
+                        <button type="button" id="btn-zoom-auto" class="btn-xs" title="Ajustar Automáticamente" style="padding: 6px 10px; height: 28px; border: 1px solid var(--accent); color: var(--accent); background: transparent;">Ajustar</button>
+                    </div>
+                    <!-- Botón Manual de Uso -->
+                    <button type="button" id="btn-toggle-manual" class="btn-xs" style="padding: 6px 12px; height: 28px; display: flex; align-items: center; gap: 6px; background-color: var(--accent); color: #000; border-radius: 4px; font-weight: bold; transition: all 0.2s;">
+                        <span>📖</span> Manual de Uso
+                    </button>
+                </div>
                 <span class="paper-size-tag">A4 (Papel de Época)</span>
             </div>
 
             <!-- Contenedor del informe impreso (A4 exacto) -->
             <div class="report-wrapper">
                 <!-- PORTADA DE ARCHIVADOR / BIENVENIDA -->
-                <article id="welcome-binder" class="report-paper welcome-binder-paper" style="display: flex; flex-direction: column;">
-                    <div class="binder-embossed-border" style="border: 4px solid #634f40; height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; position: relative; border-radius: 4px;">
-                        <div class="binder-star-badge" style="font-size: 80px; color: #d4a35c; margin-bottom: 15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">⭐</div>
-                        <h2 style="font-family: 'Rye', serif; font-size: 34px; color: #d4a35c; text-align: center; margin-bottom: 10px; letter-spacing: 2px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); font-weight: normal;">REGISTROS DE LA LEY</h2>
-                        <div style="width: 150px; height: 2px; background-color: #d4a35c; margin: 10px auto 25px auto;"></div>
-                        <h4 style="font-family: 'Outfit', sans-serif; font-size: 14px; color: #a69c93; text-transform: uppercase; letter-spacing: 2.5px; text-align: center; margin-bottom: 40px; font-weight: 500;">Oficina del Sheriff • 1885</h4>
-                        
-                        <div class="binder-tag-label" style="background-color: #eddcc4; border: 3px double #1a1510; padding: 24px; width: 340px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); transform: rotate(-1.5deg); color: #1a1510; font-family: 'Special Elite', monospace; box-sizing: border-box;">
-                            <div style="font-size: 11px; font-weight: bold; letter-spacing: 1.5px; margin-bottom: 6px;">ARCHIVADOR GENERAL</div>
-                            <div style="font-size: 16px; font-weight: bold; color: #9e2a22; border-top: 1px solid #1a1510; border-bottom: 1px solid #1a1510; padding: 6px 0; margin-top: 4px; letter-spacing: 0.5px;">EXPEDIENTES HISTÓRICOS</div>
-                            <div style="font-size: 11px; margin-top: 10px; font-style: italic; opacity: 0.85; line-height: 1.4;">Seleccione un tipo de documento en el panel izquierdo para comenzar la redacción.</div>
+                <div class="paper-scale-wrapper" id="welcome-binder-wrapper">
+                    <article id="welcome-binder" class="report-paper welcome-binder-paper" style="display: flex; flex-direction: column;">
+                        <div class="binder-embossed-border" style="border: 4px solid #634f40; height: 100%; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; box-sizing: border-box; position: relative; border-radius: 4px;">
+                            <div class="binder-star-badge" style="font-size: 80px; color: #d4a35c; margin-bottom: 15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));">⭐</div>
+                            <h2 style="font-family: 'Rye', serif; font-size: 34px; color: #d4a35c; text-align: center; margin-bottom: 10px; letter-spacing: 2px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); font-weight: normal;">REGISTROS DE LA LEY</h2>
+                            <div style="width: 150px; height: 2px; background-color: #d4a35c; margin: 10px auto 25px auto;"></div>
+                            <h4 style="font-family: 'Outfit', sans-serif; font-size: 14px; color: #a69c93; text-transform: uppercase; letter-spacing: 2.5px; text-align: center; margin-bottom: 40px; font-weight: 500;">Oficina del Sheriff • 1885</h4>
+                            
+                            <div class="binder-tag-label" style="background-color: #eddcc4; border: 3px double #1a1510; padding: 24px; width: 340px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); transform: rotate(-1.5deg); color: #1a1510; font-family: 'Special Elite', monospace; box-sizing: border-box;">
+                                <div style="font-size: 11px; font-weight: bold; letter-spacing: 1.5px; margin-bottom: 6px;">ARCHIVADOR GENERAL</div>
+                                <div style="font-size: 16px; font-weight: bold; color: #9e2a22; border-top: 1px solid #1a1510; border-bottom: 1px solid #1a1510; padding: 6px 0; margin-top: 4px; letter-spacing: 0.5px;">EXPEDIENTES HISTÓRICOS</div>
+                                <div style="font-size: 11px; margin-top: 10px; font-style: italic; opacity: 0.85; line-height: 1.4;">Seleccione un tipo de documento en el panel izquierdo para comenzar la redacción.</div>
+                            </div>
                         </div>
-                    </div>
-                </article>
+                    </article>
+                </div>
 
-                <article id="report-preview" class="report-paper" style="display: none;">
+                <div class="paper-scale-wrapper" id="report-preview-wrapper" style="display: none;">
+                    <article id="report-preview" class="report-paper">
                     <!-- Cabecera principal -->
                     <div class="report-header">
                         <!-- Placa Sheriff izquierda -->
@@ -847,79 +863,82 @@
                         </div>
                     </div>
                 </article>
+                </div>
 
                 <!-- HOJA DE INFORMACIÓN / LICENCIA -->
-                <article class="report-paper info-paper" style="font-family: 'Special Elite', monospace; font-size: 13px; line-height: 1.4; display: none; flex-direction: column;">
-                    <div class="report-header info-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-                        <div class="report-badge-container" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
-                            <img src="assets/badge.png" alt="Placa Sheriff" class="badge-img" style="max-width: 100%; max-height: 100%; object-fit: contain; opacity: 0.65;">
+                <div class="paper-scale-wrapper" id="info-paper-wrapper" style="display: none;">
+                    <article class="report-paper info-paper" style="font-family: 'Special Elite', monospace; font-size: 13px; line-height: 1.4; display: flex; flex-direction: column;">
+                        <div class="report-header info-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                            <div class="report-badge-container" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                                <img src="assets/badge.png" alt="Placa Sheriff" class="badge-img" style="max-width: 100%; max-height: 100%; object-fit: contain; opacity: 0.65;">
+                            </div>
+                            <div class="report-title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
+                                <h2 style="font-family: 'Rye', serif; font-size: 24px; font-weight: normal; color: #1a1510; margin-bottom: 2px;">MANUAL DE USO</h2>
+                                <div class="header-divider-fancy" style="width: 90%; height: 6px; background: radial-gradient(circle, #2c2520 20%, transparent 20%), linear-gradient(90deg, transparent 45%, #2c2520 45%, #2c2520 55%, transparent 55%); background-size: 10px 6px, 100% 2px; background-position: center; background-repeat: no-repeat; margin: 4px auto;"></div>
+                                <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #1a1510; padding: 2px 8px; display: inline-block; margin-top: 4px;">LICENCIA DE LA OFICINA</span>
+                            </div>
                         </div>
-                        <div class="report-title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
-                            <h2 style="font-family: 'Rye', serif; font-size: 24px; font-weight: normal; color: #1a1510; margin-bottom: 2px;">MANUAL DE USO</h2>
-                            <div class="header-divider-fancy" style="width: 90%; height: 6px; background: radial-gradient(circle, #2c2520 20%, transparent 20%), linear-gradient(90deg, transparent 45%, #2c2520 45%, #2c2520 55%, transparent 55%); background-size: 10px 6px, 100% 2px; background-position: center; background-repeat: no-repeat; margin: 4px auto;"></div>
-                            <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #1a1510; padding: 2px 8px; display: inline-block; margin-top: 4px;">LICENCIA DE LA OFICINA</span>
-                        </div>
-                    </div>
 
-                    <div class="report-content" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;">
-                        <!-- 1. AUTORÍA Y CREADOR -->
-                        <div class="report-section" style="width: 100%;">
-                            <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">1. CRÉDITOS Y PROPIEDAD</h4>
-                            <div class="section-fields" style="display: flex; flex-direction: column; gap: 4px;">
-                                <div class="field-row" style="display: flex;">
-                                    <span class="field-label" style="font-weight: bold; width: 120px;">Creador:</span>
-                                    <span class="field-val" style="font-weight: bold; color: #9e2a22;">ZaaK</span>
+                        <div class="report-content" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;">
+                            <!-- 1. AUTORÍA Y CREADOR -->
+                            <div class="report-section" style="width: 100%;">
+                                <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">1. CRÉDITOS Y PROPIEDAD</h4>
+                                <div class="section-fields" style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div class="field-row" style="display: flex;">
+                                        <span class="field-label" style="font-weight: bold; width: 120px;">Creador:</span>
+                                        <span class="field-val" style="font-weight: bold; color: #9e2a22;">ZaaK</span>
+                                    </div>
+                                    <div class="field-row" style="display: flex;">
+                                        <span class="field-label" style="font-weight: bold; width: 120px;">Licencia:</span>
+                                        <span class="field-val">Código Abierto (Open Source)</span>
+                                    </div>
+                                    <div class="field-row" style="display: flex;">
+                                        <span class="field-label" style="font-weight: bold; width: 120px;">Uso:</span>
+                                        <span class="field-val">Libre y Gratuito para Servidores</span>
+                                    </div>
                                 </div>
-                                <div class="field-row" style="display: flex;">
-                                    <span class="field-label" style="font-weight: bold; width: 120px;">Licencia:</span>
-                                    <span class="field-val">Código Abierto (Open Source)</span>
+                            </div>
+
+                            <!-- 2. TÉRMINOS Y CONDICIONES (IMPORTANTE) -->
+                            <div class="report-section" style="width: 100%;">
+                                <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">2. TÉRMINOS DE USO</h4>
+                                <p class="section-text-block" style="text-indent: 0; text-align: justify; margin-bottom: 6px;">
+                                    Esta herramienta ha sido desarrollada con fines recreativos y de rol para comunidades de **RedM Roleplay** (época 1885). Su distribución está sujeta a:
+                                </p>
+                                <ul class="section-list" style="list-style-type: none; display: flex; flex-direction: column; gap: 4px;">
+                                    <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong style="color: #9e2a22;">Reconocimiento:</strong> Debe mantenerse siempre la atribución original del creador (<strong>ZaaK</strong>) de forma visible en el código o web.</li>
+                                    <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong style="color: #9e2a22;">No Comercial:</strong> Queda terminantemente prohibida la venta, reventa o monetización comercial directa de esta herramienta o derivados.</li>
+                                    <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong>Libre Uso:</strong> Libre modificación para adaptarla a la ambientación o necesidades específicas de tu servidor.</li>
+                                </ul>
+                            </div>
+
+                            <!-- 3. GUÍA DE FUNCIONAMIENTO -->
+                            <div class="report-section" style="width: 100%;">
+                                <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">3. GUÍA RÁPIDA</h4>
+                                <ul class="section-list" style="list-style-type: none; display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+                                    <li style="position: relative; padding-left: 15px; text-align: left;"><strong>0. Documento:</strong> Selecciona el tipo de documento del menú desplegable del panel de control.</li>
+                                    <li style="position: relative; padding-left: 15px; text-align: left;"><strong>1. Rellenar:</strong> Completa los campos del panel izquierdo. Los cambios se actualizan al instante.</li>
+                                    <li style="position: relative; padding-left: 15px; text-align: left;"><strong>2. Retratos:</strong> En WANTED posters, sube una imagen local o pega una URL para aplicar filtros de daguerrotipo.</li>
+                                    <li style="position: relative; padding-left: 15px; text-align: left;"><strong>3. Firmar:</strong> Selecciona firma de caligrafía automática o dibújala con el ratón o pantalla táctil.</li>
+                                    <li style="position: relative; padding-left: 15px; text-align: left;"><strong>4. Exportar:</strong> Descarga PNG, PDF/Imprime (A4) o copia el Markdown formateado para Discord.</li>
+                                </ul>
+                            </div>
+
+                            <!-- SELLO DE LICENCIA -->
+                            <div class="report-section report-signature-section" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(26,21,16,0.3); text-align: center; position: relative;">
+                                <div style="font-size: 10px; font-style: italic; opacity: 0.8;">
+                                    "Sheriff Report Maker es software libre de uso público"
                                 </div>
-                                <div class="field-row" style="display: flex;">
-                                    <span class="field-label" style="font-weight: bold; width: 120px;">Uso:</span>
-                                    <span class="field-val">Libre y Gratuito para Servidores</span>
+                                <div style="font-size: 9px; opacity: 0.6; margin-top: 2px;">
+                                    Creado por ZaaK • Territorios de RedM Roleplay
+                                </div>
+                                <div class="official-seal-container" style="right: 15px; bottom: 0px; width: 75px; height: 75px; opacity: 0.65; position: absolute; pointer-events: none;">
+                                    <img src="assets/seal.png" alt="Sello" class="seal-img" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; transform: rotate(8deg);">
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 2. TÉRMINOS Y CONDICIONES (IMPORTANTE) -->
-                        <div class="report-section" style="width: 100%;">
-                            <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">2. TÉRMINOS DE USO</h4>
-                            <p class="section-text-block" style="text-indent: 0; text-align: justify; margin-bottom: 6px;">
-                                Esta herramienta ha sido desarrollada con fines recreativos y de rol para comunidades de **RedM Roleplay** (época 1885). Su distribución está sujeta a:
-                            </p>
-                            <ul class="section-list" style="list-style-type: none; display: flex; flex-direction: column; gap: 4px;">
-                                <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong style="color: #9e2a22;">Reconocimiento:</strong> Debe mantenerse siempre la atribución original del creador (<strong>ZaaK</strong>) de forma visible en el código o web.</li>
-                                <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong style="color: #9e2a22;">No Comercial:</strong> Queda terminantemente prohibida la venta, reventa o monetización comercial directa de esta herramienta o derivados.</li>
-                                <li style="position: relative; padding-left: 15px; text-align: left; word-break: break-word;"><strong>Libre Uso:</strong> Libre modificación para adaptarla a la ambientación o necesidades específicas de tu servidor.</li>
-                            </ul>
-                        </div>
-
-                        <!-- 3. GUÍA DE FUNCIONAMIENTO -->
-                        <div class="report-section" style="width: 100%;">
-                            <h4 class="section-title" style="font-size: 13px; font-weight: bold; border-bottom: 1px solid #1a1510; padding-bottom: 2px; margin-bottom: 6px;">3. GUÍA RÁPIDA</h4>
-                            <ul class="section-list" style="list-style-type: none; display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
-                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>0. Documento:</strong> Selecciona el tipo de documento del menú desplegable del panel de control.</li>
-                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>1. Rellenar:</strong> Completa los campos del panel izquierdo. Los cambios se actualizan al instante.</li>
-                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>2. Retratos:</strong> En WANTED posters, sube una imagen local o pega una URL para aplicar filtros de daguerrotipo.</li>
-                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>3. Firmar:</strong> Selecciona firma de caligrafía automática o dibújala con el ratón o pantalla táctil.</li>
-                                <li style="position: relative; padding-left: 15px; text-align: left;"><strong>4. Exportar:</strong> Descarga PNG, PDF/Imprime (A4) o copia el Markdown formateado para Discord.</li>
-                            </ul>
-                        </div>
-
-                        <!-- SELLO DE LICENCIA -->
-                        <div class="report-section report-signature-section" style="margin-top: auto; padding-top: 15px; border-top: 1px dashed rgba(26,21,16,0.3); text-align: center; position: relative;">
-                            <div style="font-size: 10px; font-style: italic; opacity: 0.8;">
-                                "Sheriff Report Maker es software libre de uso público"
-                            </div>
-                            <div style="font-size: 9px; opacity: 0.6; margin-top: 2px;">
-                                Creado por ZaaK • Territorios de RedM Roleplay
-                            </div>
-                            <div class="official-seal-container" style="right: 15px; bottom: 0px; width: 75px; height: 75px; opacity: 0.65; position: absolute; pointer-events: none;">
-                                <img src="assets/seal.png" alt="Sello" class="seal-img" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; transform: rotate(8deg);">
-                            </div>
-                        </div>
-                    </div>
-                </article>
+                    </article>
+                </div>
             </div>
         </main>
     </div>
